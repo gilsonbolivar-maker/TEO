@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Programa Motivacional · Teo Neto</title>
+  <meta name="description" content="Programa motivacional diário: hábitos, sequências, pontos e conquistas.">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔥</text></svg>">
+  <link rel="stylesheet" href="assets/css/estilo.css">
+</head>
+<body>
+  <header class="topo">
+    <div class="topo-identidade">
+      <div class="avatar" id="avatar">T</div>
+      <div>
+        <p class="topo-saudacao" id="saudacao">Bom dia</p>
+        <h1 class="topo-nome" id="nome-usuario">Teo Neto</h1>
+      </div>
+    </div>
+    <div class="topo-metricas">
+      <div class="metrica" title="Dias seguidos de atividade">
+        <span class="metrica-valor" id="metrica-sequencia">0</span>
+        <span class="metrica-rotulo">🔥 sequência</span>
+      </div>
+      <div class="metrica" title="Pontos acumulados">
+        <span class="metrica-valor" id="metrica-pontos">0</span>
+        <span class="metrica-rotulo">⭐ pontos</span>
+      </div>
+      <div class="metrica" title="Nível atual">
+        <span class="metrica-valor" id="metrica-nivel">1</span>
+        <span class="metrica-rotulo" id="metrica-nivel-nome">Semente</span>
+      </div>
+    </div>
+  </header>
+
+  <div class="barra-nivel" title="Progresso até o próximo nível">
+    <div class="barra-nivel-preenchida" id="barra-nivel"></div>
+    <span class="barra-nivel-texto" id="barra-nivel-texto"></span>
+  </div>
+
+  <nav class="abas" role="tablist">
+    <button class="aba ativa" data-aba="hoje" role="tab">Hoje</button>
+    <button class="aba" data-aba="progresso" role="tab">Progresso</button>
+    <button class="aba" data-aba="conquistas" role="tab">Conquistas</button>
+    <button class="aba" data-aba="ajustes" role="tab">Ajustes</button>
+  </nav>
+
+  <main>
+    <!-- ABA HOJE -->
+    <section class="painel ativo" id="painel-hoje">
+      <blockquote class="frase">
+        <p id="frase-texto"></p>
+        <cite id="frase-autor"></cite>
+      </blockquote>
+
+      <article class="cartao">
+        <div class="cartao-cabecalho">
+          <div>
+            <h2>Hábitos de hoje</h2>
+            <p class="legenda" id="data-hoje"></p>
+          </div>
+          <div class="anel" id="anel-progresso">
+            <span id="anel-texto">0%</span>
+          </div>
+        </div>
+        <ul class="lista-habitos" id="lista-habitos"></ul>
+        <p class="vazio" id="habitos-vazio" hidden>
+          Nenhum hábito ativo. Vá em <strong>Ajustes</strong> e adicione o primeiro.
+        </p>
+        <p class="rodape-cartao" id="resumo-dia"></p>
+      </article>
+
+      <article class="cartao">
+        <h2>Diário rápido</h2>
+        <label class="rotulo" for="campo-vitoria">Qual foi a vitória de hoje?</label>
+        <textarea id="campo-vitoria" rows="3" placeholder="Mesmo pequena. Escreva a vitória do dia."></textarea>
+        <p class="rotulo">Como estava a energia?</p>
+        <div class="energia" id="energia"></div>
+      </article>
+
+      <article class="cartao" id="cartao-objetivo" hidden>
+        <h2>Objetivo do programa</h2>
+        <p class="objetivo-texto" id="objetivo-texto"></p>
+      </article>
+    </section>
+
+    <!-- ABA PROGRESSO -->
+    <section class="painel" id="painel-progresso">
+      <div class="grade-stats" id="grade-stats"></div>
+
+      <article class="cartao">
+        <h2>Últimas 12 semanas</h2>
+        <p class="legenda">Cada quadradinho é um dia. Quanto mais forte a cor, mais hábitos cumpridos.</p>
+        <div class="mapa-scroll">
+          <div class="mapa" id="mapa-calor"></div>
+        </div>
+        <div class="legenda-mapa">
+          <span>menos</span>
+          <i class="celula n0"></i><i class="celula n1"></i><i class="celula n2"></i><i class="celula n3"></i><i class="celula n4"></i>
+          <span>mais</span>
+        </div>
+      </article>
+
+      <article class="cartao">
+        <h2>Desempenho por hábito</h2>
+        <p class="legenda">Percentual de dias cumpridos nos últimos 30 dias.</p>
+        <div id="desempenho-habitos"></div>
+      </article>
+
+      <article class="cartao">
+        <h2>Revisão da semana</h2>
+        <div id="revisao-semana"></div>
+      </article>
+    </section>
+
+    <!-- ABA CONQUISTAS -->
+    <section class="painel" id="painel-conquistas">
+      <article class="cartao">
+        <h2>Medalhas</h2>
+        <p class="legenda" id="conquistas-contador"></p>
+        <div class="grade-conquistas" id="grade-conquistas"></div>
+      </article>
+    </section>
+
+    <!-- ABA AJUSTES -->
+    <section class="painel" id="painel-ajustes">
+      <article class="cartao">
+        <h2>Perfil</h2>
+        <label class="rotulo" for="campo-nome">Nome</label>
+        <input id="campo-nome" type="text" maxlength="40" placeholder="Teo Neto">
+        <label class="rotulo" for="campo-objetivo">Objetivo do programa</label>
+        <textarea id="campo-objetivo" rows="2" placeholder="Ex.: terminar o semestre com nota alta e correr 5 km sem parar."></textarea>
+      </article>
+
+      <article class="cartao">
+        <h2>Hábitos</h2>
+        <p class="legenda">Desative o que não faz mais sentido; o histórico é preservado.</p>
+        <ul class="lista-editavel" id="lista-editavel"></ul>
+
+        <form class="form-habito" id="form-habito">
+          <input id="novo-icone" type="text" maxlength="2" value="✅" aria-label="Ícone" class="campo-icone">
+          <input id="novo-nome" type="text" maxlength="60" placeholder="Novo hábito" required>
+          <input id="novo-pontos" type="number" min="1" max="100" value="10" aria-label="Pontos" class="campo-pontos">
+          <button type="submit" class="botao">Adicionar</button>
+        </form>
+
+        <details class="sugestoes">
+          <summary>Sugestões prontas</summary>
+          <div id="sugestoes" class="chips"></div>
+        </details>
+      </article>
+
+      <article class="cartao">
+        <h2>Dados</h2>
+        <p class="legenda">Tudo fica salvo apenas neste navegador. Exporte para não perder.</p>
+        <div class="linha-botoes">
+          <button class="botao" id="botao-exportar">Exportar backup</button>
+          <button class="botao secundario" id="botao-importar">Importar backup</button>
+          <button class="botao perigo" id="botao-apagar">Apagar tudo</button>
+        </div>
+        <input type="file" id="arquivo-importar" accept="application/json" hidden>
+      </article>
+    </section>
+  </main>
+
+  <footer class="rodape">
+    <p>Programa Motivacional Teo Neto · um dia de cada vez.</p>
+  </footer>
+
+  <div class="aviso" id="aviso" hidden></div>
+
+  <script src="assets/js/dados.js"></script>
+  <script src="assets/js/armazenamento.js"></script>
+  <script src="assets/js/estatisticas.js"></script>
+  <script src="assets/js/app.js"></script>
+</body>
+</html>
