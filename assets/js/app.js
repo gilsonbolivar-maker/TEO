@@ -289,6 +289,7 @@ function fecharEscolhaRecompensa() {
 
 const HORAS_NO_MOSTRADOR = 12;
 let semanaVista = segundaDaSemana(hojeISO());
+let aulaEditando = null;
 const CORES_SETOR = ['#ff7a2f', '#3ecf8e', '#5b9cff', '#c77dff', '#ffb347', '#ff6b8a'];
 
 /* Ponto na circunferência para um horário: 12h no topo, sentido horário. */
@@ -394,11 +395,13 @@ function renderGrade() {
       <ul class="lista-aulas">
         ${aulasDoDia(aulas, dia).map(a => `
           <li class="aula">
-            <span class="aula-hora">${escapar(a.inicio)}<small>${escapar(a.fim)}</small></span>
-            <span class="aula-info">
-              <strong>${escapar(a.turma)}</strong>
-              <small>${a.local ? escapar(a.local) + ' · ' : ''}${a.semana ? 'só nesta semana' : 'toda semana'}${a.dias.length > 1 ? ' · ' + a.dias.map(d => DIAS_SEMANA[d].slice(0, 3)).join(', ') : ''}</small>
-            </span>
+            <button class="aula-toque" data-editar-aula="${a.id}" title="Editar aula">
+              <span class="aula-hora">${escapar(a.inicio)}<small>${escapar(a.fim)}</small></span>
+              <span class="aula-info">
+                <strong>${escapar(a.turma)}</strong>
+                <small>${a.local ? escapar(a.local) + ' · ' : ''}${a.semana ? 'só nesta semana' : 'toda semana'}${a.dias.length > 1 ? ' · ' + a.dias.map(d => DIAS_SEMANA[d].slice(0, 3)).join(', ') : ''}</small>
+              </span>
+            </button>
             <button class="icone-botao" data-remover-aula="${a.id}" title="Remover">✕</button>
           </li>`).join('')}
       </ul>
@@ -661,16 +664,32 @@ function ligarEventos() {
       <span>${DIAS_SEMANA[d].slice(0, 3)}</span>
     </label>`).join('');
 
-  $('#botao-nova-aula').addEventListener('click', () => {
-    const form = $('#form-aula');
-    form.hidden = !form.hidden;
-    if (!form.hidden) $('#aula-turma').focus();
-  });
+  function abrirFormAula(aula) {
+    aulaEditando = aula ? aula.id : null;
+    $('#form-aula').reset();
+    $$('#aula-dias input').forEach(c => { c.checked = aula ? aula.dias.includes(Number(c.value)) : false; });
+    $('#aula-inicio').value = aula ? aula.inicio : '';
+    $('#aula-fim').value = aula ? aula.fim : '';
+    $('#aula-turma').value = aula ? aula.turma : '';
+    $('#aula-local').value = aula ? aula.local : '';
+    $('#aula-repeticao').value = aula && aula.semana ? 'unica' : 'sempre';
+    $('#botao-salvar-aula').textContent = aula ? 'Salvar' : 'Adicionar';
+    $('#form-aula').hidden = false;
+    $('#aula-turma').focus();
+  }
 
-  $('#botao-cancelar-aula').addEventListener('click', () => {
+  function fecharFormAula() {
+    aulaEditando = null;
     $('#form-aula').hidden = true;
     $('#form-aula').reset();
+  }
+
+  $('#botao-nova-aula').addEventListener('click', () => {
+    if (!$('#form-aula').hidden && !aulaEditando) fecharFormAula();
+    else abrirFormAula(null);
   });
+
+  $('#botao-cancelar-aula').addEventListener('click', fecharFormAula);
 
   $('#form-aula').addEventListener('submit', evento => {
     evento.preventDefault();
@@ -682,25 +701,38 @@ function ligarEventos() {
     if (!dias.length) { avisar('Marque pelo menos um dia da semana.'); return; }
     if (minutosDe(fim) <= minutosDe(inicio)) { avisar('O fim precisa ser depois do início.'); return; }
 
+    const dados = {
+      dias: dias.sort(), inicio, fim, turma,
+      local: $('#aula-local').value.trim(),
+      semana: $('#aula-repeticao').value === 'unica' ? semanaVista : ''
+    };
+    const emEdicao = aulaEditando;
     atualizar(() => {
-      estado.aulas.push({
-        id: idNovo(), dias: dias.sort(), inicio, fim, turma,
-        local: $('#aula-local').value.trim(),
-        semana: $('#aula-repeticao').value === 'unica' ? semanaVista : ''
-      });
+      const existente = estado.aulas.find(a => a.id === emEdicao);
+      if (existente) Object.assign(existente, dados);
+      else estado.aulas.push({ id: idNovo(), ...dados });
       estado.aulas.sort((x, y) => x.dias[0] - y.dias[0] || (x.inicio < y.inicio ? -1 : 1));
     });
-    $('#form-aula').hidden = true;
-    $('#form-aula').reset();
-    avisar(dias.length > 1 ? `Aula adicionada em ${dias.length} dias.` : 'Aula adicionada à grade.');
+    avisar(emEdicao ? 'Aula atualizada.' : dias.length > 1 ? `Aula adicionada em ${dias.length} dias.` : 'Aula adicionada à grade.');
+    fecharFormAula();
   });
 
   $('#grade-aulas').addEventListener('click', evento => {
-    const botao = evento.target.closest('[data-remover-aula]');
-    if (!botao) return;
-    atualizar(() => {
-      estado.aulas = estado.aulas.filter(a => a.id !== botao.dataset.removerAula);
-    });
+    const remover = evento.target.closest('[data-remover-aula]');
+    if (remover) {
+      if (aulaEditando === remover.dataset.removerAula) fecharFormAula();
+      atualizar(() => {
+        estado.aulas = estado.aulas.filter(a => a.id !== remover.dataset.removerAula);
+      });
+      return;
+    }
+    const editar = evento.target.closest('[data-editar-aula]');
+    if (!editar) return;
+    const aula = estado.aulas.find(a => a.id === editar.dataset.editarAula);
+    if (aula) {
+      abrirFormAula(aula);
+      $('#form-aula').scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
   });
 
   $('#semana-anterior').addEventListener('click', () => { semanaVista = somarDias(semanaVista, -7); renderGrade(); });
