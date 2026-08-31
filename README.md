@@ -30,6 +30,24 @@ No celular, adicione a página à tela inicial para abrir como um app.
 - Os pontos acumulados sobem o nível, de *Semente* (0) a *Mestre* (6500). A tabela completa está no [plano](PLANO.md#5-pontos-níveis-e-medalhas).
 - A sequência conta dias seguidos com pelo menos um hábito cumprido.
 
+## Publicar online
+
+O app é estático — não precisa de build nem de servidor.
+
+**Render:** crie um **Static Site** (não Web Service), aponte para este repositório e use:
+
+| Campo | Valor |
+|---|---|
+| Root Directory | *(vazio)* |
+| Build Command | *(vazio)* |
+| Publish Directory | `.` |
+
+O arquivo `render.yaml` na raiz já traz essa configuração — se você criar o serviço via **Blueprint**, o Render preenche tudo sozinho.
+
+> Não use o plano de **Web Service**: além de exigir um comando de start que este projeto não tem, a versão gratuita hiberna após 15 minutos parada e demora para acordar. Static Site é gratuito e sempre no ar.
+
+**GitHub Pages** (alternativa ainda mais simples): no GitHub, *Settings → Pages → Source: Deploy from a branch*, escolha a branch e a pasta `/ (root)`.
+
 ## Dados e privacidade
 
 Tudo é salvo no `localStorage` **do navegador que você usa** — nada sai do aparelho, não há servidor nem conta. Consequências práticas:
@@ -48,6 +66,7 @@ assets/js/armazenamento.js  leitura/escrita no localStorage, datas, backup
 assets/js/estatisticas.js   pontos, sequências, níveis, desempenho
 assets/js/app.js            renderização e eventos
 PLANO.md                    o programa escrito: rituais, regras e protocolos
+render.yaml                 configuração de publicação no Render (site estático)
 ```
 
 ## Personalizar

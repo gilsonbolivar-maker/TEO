@@ -1,0 +1,10 @@
+# Blueprint do Render: publica o app como site estático (sem build, sem servidor).
+services:
+  - type: web
+    name: programa-teo
+    runtime: static
+    staticPublishPath: .
+    headers:
+      - path: /*
+        name: Cache-Control
+        value: no-cache
