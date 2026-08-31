@@ -670,3 +670,29 @@ select {
 }
 
 .dia-titulo { margin: 0; font-size: .86rem; font-weight: 600; text-transform: capitalize; }
+
+/* Setas do dia: alvo grande de toque, com no mínimo 56px de lado. */
+.navegador-dia .icone-botao {
+  width: 56px;
+  height: 56px;
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+  font-size: 2.2rem;
+  line-height: 1;
+  padding: 0;
+  border: 1px solid var(--borda);
+  border-radius: 50%;
+  background: var(--fundo-alt);
+  color: var(--texto);
+}
+
+.navegador-dia .icone-botao:hover,
+.navegador-dia .icone-botao:active {
+  border-color: var(--acento);
+  background: color-mix(in srgb, var(--acento) 16%, var(--fundo-alt));
+  color: var(--acento);
+}
+
+.navegador-dia { margin-bottom: 10px; }
+.navegador-dia .dia-titulo { font-size: .95rem; }
