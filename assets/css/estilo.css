@@ -660,3 +660,13 @@ select {
 
 .linha-horario-dia { font-size: .82rem; font-weight: 600; width: 74px; flex-shrink: 0; }
 .linha-horario input[type="time"] { flex: 1; min-width: 0; padding: 8px 10px; font-size: .88rem; }
+
+.navegador-dia {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 6px;
+}
+
+.dia-titulo { margin: 0; font-size: .86rem; font-weight: 600; text-transform: capitalize; }
