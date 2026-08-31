@@ -28,6 +28,8 @@ O programa acompanha o desenvolvimento em **atividades específicas**. Cada ativ
 
 O app é deliberadamente enxuto: sem hábitos diários, medalhas, pontuação de jogo ou diário. A tela mostra o que informa o progresso e nada mais.
 
+**Identidade visual:** tema escuro de "alta relojoaria" — superfícies de vidro e metal, acento dourado, tipografia Cormorant Garamond nos títulos e Inter no texto. O mostrador é desenhado como um relógio de verdade: bisel canelado, traços de hora reforçados de três em três, assinatura no mostrador e ponteiro em lâmina com sombra.
+
 ## Publicar online
 
 O app é estático — não precisa de build nem de servidor.

@@ -329,7 +329,7 @@ let aulaEditando = null;
 let diaVisto = hojeISO();
 let horariosDoForm = {};
 const horariosAbertos = new Set();
-const CORES_SETOR = ['#ff7a2f', '#3ecf8e', '#5b9cff', '#c77dff', '#ffb347', '#ff6b8a'];
+const CORES_SETOR = ['#d8a44e', '#5b8fe0', '#3fbf8f', '#c78ce0', '#f3d79a', '#e2685f'];
 
 /* Ponto na circunferência para um horário. A volta completa vale 12h no dia de
    hoje e 24h quando se olha outro dia, para manhã e noite não se sobreporem. */
@@ -368,45 +368,69 @@ function renderMostrador(agora) {
     };
   });
 
-  const marcas = Array.from({ length: marcasVisiveis }, (_, i) => {
-    const minuto = i * (volta / marcasVisiveis);
-    const [x1, y1] = pontoDoRelogio(100, 100, 76, minuto, volta);
+  /* Traços: um por hora, reforçados de três em três, onde ficam os números. */
+  const tracos = Array.from({ length: 24 }, (_, i) => {
+    const minuto = i * 60;
+    const indice = i % 3 === 0;
+    const [x1, y1] = pontoDoRelogio(100, 100, indice ? 74 : 77, minuto, volta);
     const [x2, y2] = pontoDoRelogio(100, 100, 81, minuto, volta);
-    const [xt, yt] = pontoDoRelogio(100, 100, 91, minuto, volta);
-    const rotulo = minuto / 60 + 'h';
-    return `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" class="marca"></line>
-            <text x="${xt}" y="${yt}" class="marca-hora">${rotulo}</text>`;
+    return `<line x1="${x1.toFixed(2)}" y1="${y1.toFixed(2)}" x2="${x2.toFixed(2)}" y2="${y2.toFixed(2)}"
+                  class="traco ${indice ? 'indice' : ''}"></line>`;
   }).join('');
 
-  const setores = itens.map((item, i) => `
-    <path d="${setorSVG(item.minutoInicio, item.minutoFim, 48, 72, volta)}"
-          fill="${CORES_SETOR[i % CORES_SETOR.length]}"
-          opacity="${item.emCurso ? 1 : item.passou ? .35 : .82}"></path>`).join('');
+  const numeros = Array.from({ length: marcasVisiveis }, (_, i) => {
+    const minuto = i * (volta / marcasVisiveis);
+    const [x, y] = pontoDoRelogio(100, 100, 91, minuto, volta);
+    return `<text x="${x.toFixed(2)}" y="${y.toFixed(2)}" class="marca-hora">${minuto / 60}h</text>`;
+  }).join('');
 
+  const setores = itens.map((item, i) => {
+    const cor = CORES_SETOR[i % CORES_SETOR.length];
+    const estado = item.emCurso ? 'em-curso' : item.passou ? 'passou' : '';
+    return `
+      <path d="${setorSVG(item.minutoInicio, item.minutoFim, 48, 72, volta)}" fill="${cor}" class="setor ${estado}"></path>
+      <path d="${setorSVG(item.minutoInicio, item.minutoFim, 66, 72, volta)}" fill="${cor}" class="setor-brilho ${estado}"></path>`;
+  }).join('');
+
+  /* Ponteiro em lâmina, com sombra deslocada. */
   let ponteiro = '';
   if (ehHoje) {
-    const [px, py] = pontoDoRelogio(100, 100, 74, minutos, volta);
-    const [pxi, pyi] = pontoDoRelogio(100, 100, 14, minutos + volta / 2, volta);
-    ponteiro = `<line x1="${pxi}" y1="${pyi}" x2="${px}" y2="${py}" class="ponteiro"></line>
-                <circle cx="100" cy="100" r="5" class="centro"></circle>`;
+    const [pa, pb] = pontoDoRelogio(100, 100, 74, minutos, volta);
+    const [ea, eb] = pontoDoRelogio(100, 100, 4, minutos - volta / 4, volta);
+    const [da, db] = pontoDoRelogio(100, 100, 4, minutos + volta / 4, volta);
+    const [ca, cb] = pontoDoRelogio(100, 100, 16, minutos + volta / 2, volta);
+    const lamina = `${pa.toFixed(2)},${pb.toFixed(2)} ${ea.toFixed(2)},${eb.toFixed(2)} ${ca.toFixed(2)},${cb.toFixed(2)} ${da.toFixed(2)},${db.toFixed(2)}`;
+    const [sa, sb] = pontoDoRelogio(100, 100, 84, minutos + agora.getSeconds() / 60, volta);
+    ponteiro = `
+      <polygon points="${lamina}" class="ponteiro-sombra"></polygon>
+      <polygon points="${lamina}" class="ponteiro"></polygon>
+      <line x1="100" y1="100" x2="${sa.toFixed(2)}" y2="${sb.toFixed(2)}" class="ponteiro-segundos"></line>
+      <circle cx="100" cy="100" r="4.2" class="centro-aro"></circle>
+      <circle cx="100" cy="100" r="2.1" class="centro"></circle>`;
   }
 
   const centro = ehHoje
     ? agora.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
-    : `${itens.length}`;
+    : DIAS_SEMANA[isoParaData(diaVisto).getDay()];
   const legendaCentro = `${itens.length} compromisso${itens.length === 1 ? '' : 's'}${ehHoje ? ' hoje' : ''}`;
 
   $('#mostrador').innerHTML = `
     <svg class="setograma" viewBox="0 0 200 200" role="img"
          aria-label="Compromissos de ${escapar(diaVisto)}">
+      <circle cx="100" cy="100" r="94" class="aro-canelado"></circle>
+      <circle cx="100" cy="100" r="84" class="aro-sombra-interna"></circle>
       <circle cx="100" cy="100" r="72" class="aro"></circle>
       <circle cx="100" cy="100" r="48" class="aro-interno"></circle>
       ${setores}
-      ${marcas}
+      ${tracos}
+      ${numeros}
+      <text x="100" y="78" class="assinatura">TEO NETO</text>
       ${ponteiro}
-      <text x="100" y="95" class="hora-central">${escapar(centro)}</text>
-      <text x="100" y="110" class="hora-legenda">${escapar(legendaCentro)}</text>
     </svg>`;
+
+  $('#relogio-abaixo').innerHTML = `
+    <span class="relogio-hora">${escapar(centro)}</span>
+    <span class="relogio-detalhe">${escapar(legendaCentro)}</span>`;
 
   $('#legenda-setores').innerHTML = itens.map((item, i) => `
     <li>
