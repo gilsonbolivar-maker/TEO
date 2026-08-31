@@ -78,7 +78,7 @@ O programa é um Progressive Web App: instala na tela de início e **funciona se
 
 Depois de instalado, o app abre em tela cheia, com ícone próprio, sem barra de navegador, e carrega mesmo em modo avião — o `sw.js` guarda os arquivos no aparelho.
 
-> Ao alterar arquivos do app, suba a versão em `sw.js` (`const VERSAO = 'teo-v1'`) para os aparelhos já instalados receberem a atualização.
+> O `sw.js` busca código e estilo na rede primeiro, usando o cache apenas como reserva sem internet — assim uma versão nova nunca roda com arquivos antigos. Quando um service worker novo assume, a página recarrega uma vez sozinha. Ao alterar arquivos do app, suba mesmo assim a versão em `sw.js` (`const VERSAO`).
 
 ### Lembrete diário
 

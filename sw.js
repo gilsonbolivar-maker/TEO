@@ -3,7 +3,7 @@
  * Ao mudar qualquer arquivo do app, suba o número da versão abaixo.
  */
 
-const VERSAO = 'teo-v17';
+const VERSAO = 'teo-v18';
 
 const ARQUIVOS = [
   './',
@@ -53,19 +53,17 @@ self.addEventListener('fetch', evento => {
     return;
   }
 
-  /* Demais arquivos: responde do cache na hora e atualiza em segundo plano. */
+  /* Código e estilo vêm da rede primeiro: assim uma versão nova nunca fica
+     rodando com arquivos antigos. O cache serve de reserva quando falta internet. */
   evento.respondWith(
-    caches.match(req).then(guardado => {
-      const daRede = fetch(req)
-        .then(resposta => {
-          if (resposta && resposta.status === 200) {
-            const copia = resposta.clone();
-            caches.open(VERSAO).then(cache => cache.put(req, copia));
-          }
-          return resposta;
-        })
-        .catch(() => guardado);
-      return guardado || daRede;
-    })
+    fetch(req)
+      .then(resposta => {
+        if (resposta && resposta.status === 200) {
+          const copia = resposta.clone();
+          caches.open(VERSAO).then(cache => cache.put(req, copia));
+        }
+        return resposta;
+      })
+      .catch(() => caches.match(req))
   );
 });

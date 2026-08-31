@@ -832,11 +832,20 @@ function iniciar() {
 
 iniciar();
 
-/* Registra o service worker para o programa funcionar sem internet. */
+/* Registra o service worker para o programa funcionar sem internet.
+   Quando uma versão nova assume, a página recarrega uma vez: sem isso o
+   HTML novo ficaria rodando com o JavaScript antigo guardado no aparelho. */
 if ('serviceWorker' in navigator &&
     (location.protocol === 'https:' || location.hostname === 'localhost')) {
+  let recarregando = false;
+  navigator.serviceWorker.addEventListener('controllerchange', () => {
+    if (recarregando) return;
+    recarregando = true;
+    location.reload();
+  });
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('sw.js')
+      .then(registro => registro.update())
       .catch(erro => console.warn('Service worker não registrado:', erro));
   });
 }
