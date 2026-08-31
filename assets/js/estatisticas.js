@@ -74,7 +74,7 @@ function abastecimentosComConsumo(moto) {
       ...a,
       distancia,
       consumo: anterior && a.litros > 0 ? distancia / a.litros : 0,
-      precoLitro: a.valor > 0 ? a.valor / a.litros : 0
+      precoLitro: a.preco || (a.valor > 0 ? a.valor / a.litros : 0)
     };
   });
 }

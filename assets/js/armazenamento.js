@@ -77,7 +77,8 @@ function normalizarMoto(bruto) {
         em: typeof a.em === 'string' ? a.em : hojeISO(),
         km: Number(a.km),
         litros: Number(a.litros),
-        valor: Number(a.valor) || 0
+        valor: Number(a.valor) || 0,
+        preco: Number(a.preco) || (Number(a.valor) > 0 ? Number(a.valor) / Number(a.litros) : 0)
       }))
       .sort((x, y) => x.km - y.km)
   };

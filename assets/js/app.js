@@ -548,9 +548,12 @@ function ligarEventos() {
       avisar('Já existe um registro com essa quilometragem.');
       return;
     }
+    const preco = Number($('#ab-preco').value) || 0;
+    const valor = Number($('#ab-valor').value) || (preco > 0 ? preco * litros : 0);
     atualizar(() => {
       estado.moto.abastecimentos.push({
-        id: idNovo(), em: hoje, km, litros, valor: Number($('#ab-valor').value) || 0
+        id: idNovo(), em: hoje, km, litros, valor,
+        preco: preco || (valor > 0 ? valor / litros : 0)
       });
       estado.moto.abastecimentos.sort((a, b) => a.km - b.km);
     });
@@ -558,6 +561,19 @@ function ligarEventos() {
     $('#form-abastecimento').reset();
     const r = resumoMoto(estado.moto);
     avisar(r.ultimoConsumo ? `Consumo: ${numero(r.ultimoConsumo, 1)} km/l` : 'Abastecimento registrado.');
+  });
+
+  /* Preço do litro e valor pago se completam: preencher um calcula o outro. */
+  $('#form-abastecimento').addEventListener('input', evento => {
+    const litros = Number($('#ab-litros').value);
+    if (!(litros > 0)) return;
+    if (evento.target.id === 'ab-preco' || (evento.target.id === 'ab-litros' && $('#ab-preco').value)) {
+      const preco = Number($('#ab-preco').value);
+      if (preco > 0) $('#ab-valor').value = (preco * litros).toFixed(2);
+    } else if (evento.target.id === 'ab-valor') {
+      const valor = Number($('#ab-valor').value);
+      if (valor > 0) $('#ab-preco').value = (valor / litros).toFixed(2);
+    }
   });
 
   $('#lista-abastecimentos').addEventListener('click', evento => {
