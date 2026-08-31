@@ -155,33 +155,6 @@ function ocorrenciasDoDia(aulas, iso) {
     .sort((x, y) => minutosDe(x.inicio) - minutosDe(y.inicio));
 }
 
-/* Qual aula está acontecendo e qual vem a seguir, a partir do momento informado. */
-function situacaoAulas(aulas, agora, hojeIso) {
-  const minutos = agora.getHours() * 60 + agora.getMinutes();
-
-  const emAndamento = ocorrenciasDoDia(aulas, hojeIso).find(o =>
-    minutosDe(o.inicio) <= minutos && minutos < minutosDe(o.fim)) || null;
-
-  let proxima = null;
-  let faltam = 0;
-  for (let adiante = 0; adiante < 7 && !proxima; adiante++) {
-    const dia = somarDias(hojeIso, adiante);
-    const candidatas = ocorrenciasDoDia(aulas, dia)
-      .filter(o => adiante > 0 || minutosDe(o.inicio) > minutos);
-    if (candidatas.length) {
-      proxima = { ...candidatas[0], dia };
-      faltam = adiante * 1440 + minutosDe(candidatas[0].inicio) - minutos;
-    }
-  }
-
-  return {
-    emAndamento,
-    restante: emAndamento ? minutosDe(emAndamento.fim) - minutos : 0,
-    proxima,
-    faltam
-  };
-}
-
 /* Aulas que aparecem nas próximas horas, recortadas nessa janela. */
 function aulasNaJanela(aulas, agora, horas, hojeIso) {
   const minutosAgora = agora.getHours() * 60 + agora.getMinutes();
@@ -205,4 +178,64 @@ function aulasNaJanela(aulas, agora, horas, hojeIso) {
   });
 
   return janela.sort((a, b) => a.inicio - b.inicio);
+}
+
+/* A agenda de um dia: aulas e fases de atividade com horário marcado. */
+function agendaDoDia(estado, iso) {
+  const dia = isoParaData(iso).getDay();
+  const itens = ocorrenciasDoDia(estado.aulas || [], iso).map(o => ({
+    tipo: 'aula',
+    icone: '🎓',
+    titulo: o.aula.turma,
+    detalhe: o.aula.local,
+    inicio: o.inicio,
+    fim: o.fim
+  }));
+
+  (estado.atividades || []).forEach(atividade => {
+    if (atividade.concluida) return;
+    atividade.pontos.forEach((ponto, indice) => {
+      const h = ponto.horarios[dia];
+      if (!h || ponto.concluido) return;
+      itens.push({
+        tipo: 'ponto',
+        icone: atividade.icone,
+        titulo: ponto.titulo.trim() || `Ponto ${indice + 1}`,
+        detalhe: atividade.titulo,
+        inicio: h.inicio,
+        fim: h.fim,
+        atividadeId: atividade.id
+      });
+    });
+  });
+
+  return itens.sort((a, b) => minutosDe(a.inicio) - minutosDe(b.inicio));
+}
+
+/* O que está acontecendo agora e o que vem a seguir, considerando aulas e fases. */
+function situacaoAgenda(estado, agora, hojeIso) {
+  const minutos = agora.getHours() * 60 + agora.getMinutes();
+  const deHoje = agendaDoDia(estado, hojeIso);
+
+  const emAndamento = deHoje.find(i =>
+    minutosDe(i.inicio) <= minutos && minutos < minutosDe(i.fim)) || null;
+
+  let proximo = null;
+  let faltam = 0;
+  for (let adiante = 0; adiante < 7 && !proximo; adiante++) {
+    const dia = somarDias(hojeIso, adiante);
+    const candidatos = agendaDoDia(estado, dia)
+      .filter(i => adiante > 0 || minutosDe(i.inicio) > minutos);
+    if (candidatos.length) {
+      proximo = { ...candidatos[0], dia };
+      faltam = adiante * 1440 + minutosDe(candidatos[0].inicio) - minutos;
+    }
+  }
+
+  return {
+    emAndamento,
+    restante: emAndamento ? minutosDe(emAndamento.fim) - minutos : 0,
+    proximo,
+    faltam
+  };
 }

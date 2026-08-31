@@ -26,8 +26,21 @@ function somarDias(iso, dias) {
   return `${d.getFullYear()}-${mes}-${dia}`;
 }
 
+/* Horários por dia da semana: { 1: { inicio: '20:00', fim: '21:00' } } */
+function normalizarHorarios(bruto) {
+  const limpo = {};
+  if (!bruto || typeof bruto !== 'object') return limpo;
+  Object.keys(bruto).forEach(dia => {
+    const h = bruto[dia] || {};
+    if (/^\d{2}:\d{2}$/.test(h.inicio || '') && /^\d{2}:\d{2}$/.test(h.fim || '')) {
+      limpo[Number(dia)] = { inicio: h.inicio, fim: h.fim };
+    }
+  });
+  return limpo;
+}
+
 function pontosVazios() {
-  return Array.from({ length: PONTOS_POR_ATIVIDADE }, () => ({ titulo: '', concluido: false, em: '', recompensa: '' }));
+  return Array.from({ length: PONTOS_POR_ATIVIDADE }, () => ({ titulo: '', concluido: false, em: '', recompensa: '', horarios: {} }));
 }
 
 /* Sempre devolve exatamente 5 pontos, completando o que vier salvo. */
@@ -39,7 +52,8 @@ function normalizarPontos(bruto) {
       titulo: typeof p.titulo === 'string' ? p.titulo : '',
       concluido: p.concluido === true,
       em: typeof p.em === 'string' ? p.em : '',
-      recompensa: typeof p.recompensa === 'string' ? p.recompensa : ''
+      recompensa: typeof p.recompensa === 'string' ? p.recompensa : '',
+      horarios: normalizarHorarios(p.horarios)
     };
   });
 }

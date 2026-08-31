@@ -10,6 +10,7 @@ const $ = sel => document.querySelector(sel);
 const $$ = sel => Array.from(document.querySelectorAll(sel));
 
 const ABAS_FINAIS = [
+  { id: 'atividades', rotulo: 'Atividades' },
   { id: 'progresso', rotulo: 'Progresso' },
   { id: 'aulas', rotulo: '🎓 Aulas' },
   { id: 'moto', rotulo: '🏍️ Moto' },
@@ -147,6 +148,37 @@ function circuloDePontos(atividade) {
     </svg>`;
 }
 
+function resumoHorario(ponto) {
+  const dias = Object.keys(ponto.horarios).map(Number).sort();
+  if (!dias.length) return 'Definir horário';
+  const hora = ponto.horarios[dias[0]].inicio;
+  return `${dias.map(d => DIAS_SEMANA[d].slice(0, 3)).join(', ')} · ${hora}`;
+}
+
+function editorHorario(ponto, indice) {
+  const dias = Object.keys(ponto.horarios).map(Number).sort();
+  return `
+    <div class="editor-horario">
+      <p class="legenda">Em que dias e horas você vai executar esta fase? (opcional)</p>
+      <div class="dias-semana">
+        ${[1, 2, 3, 4, 5, 6, 0].map(d => `
+          <label class="dia-chip">
+            <input type="checkbox" class="dia-ponto" data-indice="${indice}" value="${d}" ${ponto.horarios[d] ? 'checked' : ''}>
+            <span>${DIAS_SEMANA[d].slice(0, 3)}</span>
+          </label>`).join('')}
+      </div>
+      ${dias.map(d => `
+        <div class="linha-horario">
+          <span class="linha-horario-dia">${DIAS_SEMANA[d]}</span>
+          <input type="time" class="hora-ponto" data-indice="${indice}" data-dia="${d}" data-campo="inicio"
+                 value="${escapar(ponto.horarios[d].inicio)}" aria-label="Início de ${DIAS_SEMANA[d]}">
+          <span class="separador">às</span>
+          <input type="time" class="hora-ponto" data-indice="${indice}" data-dia="${d}" data-campo="fim"
+                 value="${escapar(ponto.horarios[d].fim)}" aria-label="Fim de ${DIAS_SEMANA[d]}">
+        </div>`).join('')}
+    </div>`;
+}
+
 function listaDePontos(atividade) {
   return atividade.pontos.map((ponto, i) => `
     <li class="ponto ${ponto.concluido ? 'feito' : ''}">
@@ -162,10 +194,15 @@ function listaDePontos(atividade) {
                aria-label="Nome do ponto ${i + 1}">
         <span class="ponto-peso">${ponto.concluido ? escapar(formatarDataCurta(ponto.em)) : PESO_DO_PONTO + '%'}</span>
       </div>
-      ${ponto.concluido ? `
-        <button class="ponto-recompensa" data-acao="escolher-recompensa" data-indice="${i}">
-          ${ponto.recompensa ? '🎁 ' + escapar(ponto.recompensa) : '🎁 Escolher recompensa'}
-        </button>` : ''}
+      <div class="ponto-extras">
+        ${ponto.concluido ? `
+          <button class="ponto-marcador" data-acao="escolher-recompensa" data-indice="${i}">
+            ${ponto.recompensa ? '🎁 ' + escapar(ponto.recompensa) : '🎁 Escolher recompensa'}
+          </button>` : ''}
+        <button class="ponto-marcador ${Object.keys(ponto.horarios).length ? 'ativo' : ''}"
+                data-acao="abrir-horario" data-indice="${i}">🕐 ${escapar(resumoHorario(ponto))}</button>
+      </div>
+      ${horariosAbertos.has(i) ? editorHorario(ponto, i) : ''}
     </li>`).join('');
 }
 
@@ -291,6 +328,7 @@ let semanaVista = segundaDaSemana(hojeISO());
 let aulaEditando = null;
 let diaVisto = hojeISO();
 let horariosDoForm = {};
+const horariosAbertos = new Set();
 const CORES_SETOR = ['#ff7a2f', '#3ecf8e', '#5b9cff', '#c77dff', '#ffb347', '#ff6b8a'];
 
 /* Ponto na circunferência para um horário. A volta completa vale 12h no dia de
@@ -316,13 +354,18 @@ function renderMostrador(agora) {
   const marcasVisiveis = 8;
   const minutos = agora.getHours() * 60 + agora.getMinutes() + agora.getSeconds() / 60;
 
-  /* O mostrador cobre o dia inteiro; no dia de hoje, o que já passou fica esmaecido. */
-  const itens = ocorrenciasDoDia(estado.aulas || [], diaVisto).map(o => {
-    const inicio = minutosDe(o.inicio);
-    const fim = minutosDe(o.fim);
-    const emCurso = ehHoje && inicio <= minutos && minutos < fim;
-    const passou = ehHoje && fim <= minutos;
-    return { aula: o.aula, hora: o, inicio, fim, emCurso, passou };
+  /* O mostrador cobre o dia inteiro: aulas e fases de atividade com horário.
+     No dia de hoje, o que já passou fica esmaecido. */
+  const itens = agendaDoDia(estado, diaVisto).map(item => {
+    const inicio = minutosDe(item.inicio);
+    const fim = minutosDe(item.fim);
+    return {
+      ...item,
+      minutoInicio: inicio,
+      minutoFim: fim,
+      emCurso: ehHoje && inicio <= minutos && minutos < fim,
+      passou: ehHoje && fim <= minutos
+    };
   });
 
   const marcas = Array.from({ length: marcasVisiveis }, (_, i) => {
@@ -336,7 +379,7 @@ function renderMostrador(agora) {
   }).join('');
 
   const setores = itens.map((item, i) => `
-    <path d="${setorSVG(item.inicio, item.fim, 48, 72, volta)}"
+    <path d="${setorSVG(item.minutoInicio, item.minutoFim, 48, 72, volta)}"
           fill="${CORES_SETOR[i % CORES_SETOR.length]}"
           opacity="${item.emCurso ? 1 : item.passou ? .35 : .82}"></path>`).join('');
 
@@ -350,14 +393,12 @@ function renderMostrador(agora) {
 
   const centro = ehHoje
     ? agora.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
-    : `${itens.length} aula${itens.length === 1 ? '' : 's'}`;
-  const legendaCentro = ehHoje
-    ? `${itens.length} aula${itens.length === 1 ? '' : 's'} hoje`
-    : 'dia inteiro';
+    : `${itens.length}`;
+  const legendaCentro = `${itens.length} compromisso${itens.length === 1 ? '' : 's'}${ehHoje ? ' hoje' : ''}`;
 
   $('#mostrador').innerHTML = `
     <svg class="setograma" viewBox="0 0 200 200" role="img"
-         aria-label="Aulas de ${escapar(diaVisto)}">
+         aria-label="Compromissos de ${escapar(diaVisto)}">
       <circle cx="100" cy="100" r="72" class="aro"></circle>
       <circle cx="100" cy="100" r="48" class="aro-interno"></circle>
       ${setores}
@@ -370,9 +411,11 @@ function renderMostrador(agora) {
   $('#legenda-setores').innerHTML = itens.map((item, i) => `
     <li>
       <span class="ponto-cor" style="background:${CORES_SETOR[i % CORES_SETOR.length]}"></span>
-      <strong>${escapar(item.aula.turma)}</strong>
-      <small>${escapar(item.hora.inicio)}–${escapar(item.hora.fim)}${item.aula.local ? ' · ' + escapar(item.aula.local) : ''}${item.emCurso ? ' · agora' : ''}</small>
-    </li>`).join('') || '<li class="legenda">Nenhuma aula neste dia.</li>';
+      <span class="legenda-texto">
+        <strong>${escapar(item.icone)} ${escapar(item.titulo)}</strong>
+        <small>${escapar(item.inicio)}–${escapar(item.fim)}${item.detalhe ? ' · ' + escapar(item.detalhe) : ''}${item.emCurso ? ' · agora' : ''}</small>
+      </span>
+    </li>`).join('') || '<li class="legenda">Nada marcado neste dia.</li>';
 
   $('#dia-titulo').textContent = ehHoje
     ? `Hoje · ${DIAS_SEMANA[isoParaData(hoje).getDay()]}, ${formatarDataCurta(hoje)}`
@@ -383,29 +426,25 @@ function renderMostrador(agora) {
 function renderRelogio() {
   const agora = new Date();
   renderMostrador(agora);
-  $('#relogio-data').textContent = agora.toLocaleDateString('pt-BR', {
-    weekday: 'long', day: '2-digit', month: 'long'
-  });
-
-  const s = situacaoAulas(estado.aulas || [], agora, hoje);
+  const s = situacaoAgenda(estado, agora, hoje);
   const caixa = $('#aula-agora');
   caixa.hidden = diaVisto !== hoje;
 
   if (s.emAndamento) {
     caixa.className = 'aula-agora em-aula';
     caixa.innerHTML = `
-      <p class="aula-rotulo">Aula agora</p>
-      <p class="aula-turma">${escapar(s.emAndamento.aula.turma)}</p>
-      <p class="aula-detalhe">${escapar(s.emAndamento.inicio)} às ${escapar(s.emAndamento.fim)}${s.emAndamento.aula.local ? ' · ' + escapar(s.emAndamento.aula.local) : ''} · termina em ${duracaoEmTexto(s.restante)}</p>`;
-  } else if (s.proxima) {
+      <p class="aula-rotulo">${s.emAndamento.tipo === 'aula' ? 'Aula agora' : 'Agora'}</p>
+      <p class="aula-turma">${escapar(s.emAndamento.icone)} ${escapar(s.emAndamento.titulo)}</p>
+      <p class="aula-detalhe">${escapar(s.emAndamento.inicio)} às ${escapar(s.emAndamento.fim)}${s.emAndamento.detalhe ? ' · ' + escapar(s.emAndamento.detalhe) : ''} · termina em ${duracaoEmTexto(s.restante)}</p>`;
+  } else if (s.proximo) {
     caixa.className = 'aula-agora';
     caixa.innerHTML = `
-      <p class="aula-rotulo">Sem aula agora · próxima</p>
-      <p class="aula-turma">${escapar(s.proxima.aula.turma)}</p>
-      <p class="aula-detalhe">${escapar(DIAS_SEMANA[isoParaData(s.proxima.dia).getDay()])}, ${escapar(s.proxima.inicio)}${s.proxima.aula.local ? ' · ' + escapar(s.proxima.aula.local) : ''} · em ${duracaoEmTexto(s.faltam)}</p>`;
+      <p class="aula-rotulo">Nada agora · a seguir</p>
+      <p class="aula-turma">${escapar(s.proximo.icone)} ${escapar(s.proximo.titulo)}</p>
+      <p class="aula-detalhe">${escapar(DIAS_SEMANA[isoParaData(s.proximo.dia).getDay()])}, ${escapar(s.proximo.inicio)}${s.proximo.detalhe ? ' · ' + escapar(s.proximo.detalhe) : ''} · em ${duracaoEmTexto(s.faltam)}</p>`;
   } else {
     caixa.className = 'aula-agora';
-    caixa.innerHTML = '<p class="aula-detalhe">Nenhuma aula cadastrada na grade.</p>';
+    caixa.innerHTML = '<p class="aula-detalhe">Nada marcado na agenda. Cadastre aulas ou dê horário às fases das atividades.</p>';
   }
 }
 
@@ -604,6 +643,39 @@ function ligarEventos() {
     }
   });
 
+  /* Dias e horas de cada fase da atividade. */
+  document.addEventListener('change', evento => {
+    const chip = evento.target.closest('.dia-ponto');
+    if (!chip) return;
+    const atividade = atividadeDaAba();
+    if (!atividade) return;
+    const ponto = atividade.pontos[Number(chip.dataset.indice)];
+    const dia = Number(chip.value);
+    if (chip.checked) {
+      const referencia = Object.values(ponto.horarios)[0];
+      ponto.horarios[dia] = referencia ? { ...referencia } : { inicio: '19:00', fim: '20:00' };
+    } else {
+      delete ponto.horarios[dia];
+    }
+    persistir();
+    render();
+  });
+
+  document.addEventListener('input', evento => {
+    const campo = evento.target.closest('.hora-ponto');
+    if (!campo) return;
+    const atividade = atividadeDaAba();
+    if (!atividade) return;
+    const ponto = atividade.pontos[Number(campo.dataset.indice)];
+    const dia = Number(campo.dataset.dia);
+    if (!ponto.horarios[dia]) return;
+    ponto.horarios[dia][campo.dataset.campo] = campo.value;
+    persistir();
+    /* Atualiza só o resumo do botão, para não redesenhar o campo em uso. */
+    const botao = $(`[data-acao="abrir-horario"][data-indice="${campo.dataset.indice}"]`);
+    if (botao) botao.textContent = `🕐 ${resumoHorario(ponto)}`;
+  });
+
   document.addEventListener('click', evento => {
     const gatilho = evento.target.closest('[data-acao]');
     if (!gatilho) return;
@@ -615,6 +687,7 @@ function ligarEventos() {
     const acao = gatilho.dataset.acao;
 
     if (acao === 'abrir') {
+      horariosAbertos.clear();
       trocarAba('atv:' + id);
 
     } else if (acao === 'alternar-ponto') {
@@ -629,6 +702,12 @@ function ligarEventos() {
       });
       renderPainelAtividade();
       if (ponto.concluido) abrirEscolhaRecompensa(atividade, Number(gatilho.dataset.indice));
+
+    } else if (acao === 'abrir-horario') {
+      const indice = Number(gatilho.dataset.indice);
+      if (horariosAbertos.has(indice)) horariosAbertos.delete(indice);
+      else horariosAbertos.add(indice);
+      renderPainelAtividade();
 
     } else if (acao === 'escolher-recompensa') {
       abrirEscolhaRecompensa(atividade, Number(gatilho.dataset.indice));

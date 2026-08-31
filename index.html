@@ -32,6 +32,23 @@
   <main>
     <!-- INÍCIO: resumo e lista de atividades -->
     <section class="painel ativo" id="painel-inicio">
+      <article class="cartao cartao-relogio">
+        <div class="navegador-dia">
+          <button class="icone-botao" id="dia-anterior" title="Dia anterior">‹</button>
+          <div>
+            <p class="dia-titulo" id="dia-titulo"></p>
+            <button class="botao-link" id="dia-hoje" hidden>voltar para hoje</button>
+          </div>
+          <button class="icone-botao" id="dia-proximo" title="Próximo dia">›</button>
+        </div>
+        <div class="mostrador" id="mostrador"></div>
+        <ul class="legenda-setores" id="legenda-setores"></ul>
+        <div class="aula-agora" id="aula-agora"></div>
+      </article>
+    </section>
+
+    <!-- ATIVIDADES -->
+    <section class="painel" id="painel-atividades">
       <div class="resumo" id="resumo"></div>
 
       <article class="cartao">
@@ -73,21 +90,6 @@
 
     <!-- AULAS -->
     <section class="painel" id="painel-aulas">
-      <article class="cartao cartao-relogio">
-        <div class="navegador-dia">
-          <button class="icone-botao" id="dia-anterior" title="Dia anterior">‹</button>
-          <div>
-            <p class="dia-titulo" id="dia-titulo"></p>
-            <button class="botao-link" id="dia-hoje" hidden>voltar para hoje</button>
-          </div>
-          <button class="icone-botao" id="dia-proximo" title="Próximo dia">›</button>
-        </div>
-        <div class="mostrador" id="mostrador"></div>
-        <p class="relogio-data" id="relogio-data"></p>
-        <ul class="legenda-setores" id="legenda-setores"></ul>
-        <div class="aula-agora" id="aula-agora"></div>
-      </article>
-
       <article class="cartao">
         <div class="cartao-cabecalho">
           <h2>Grade da semana</h2>
