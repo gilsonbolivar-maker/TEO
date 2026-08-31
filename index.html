@@ -86,9 +86,12 @@
         <p class="legenda">A cada ponto concluído você escolhe uma destas. Cadastre o que vale a pena para você.</p>
         <ul class="lista-recompensas" id="lista-recompensas"></ul>
         <p class="vazio" id="recompensas-vazio">Nenhuma recompensa cadastrada ainda.</p>
-        <form class="linha-botoes" id="form-recompensa">
-          <input id="nova-recompensa" type="text" maxlength="60" placeholder="Ex.: uma hora de jogo" required>
-          <button type="submit" class="botao">Adicionar</button>
+        <form id="form-recompensa">
+          <div class="linha-botoes">
+            <input id="nova-recompensa" type="text" maxlength="60" placeholder="O que você acha que merece?" required>
+            <button type="submit" class="botao">Adicionar</button>
+          </div>
+          <div class="avaliacao" id="avaliacao-recompensa" hidden></div>
         </form>
       </article>
 

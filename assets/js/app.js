@@ -236,6 +236,17 @@ function renderRecompensas() {
   $('#recompensas-vazio').hidden = lista.length > 0;
 }
 
+const ICONE_NIVEL = { alerta: '⛔', atencao: '⚠️', bom: '✅', neutro: '🔎' };
+
+function renderAvaliacao(texto) {
+  const caixa = $('#avaliacao-recompensa');
+  const avisos = avaliarRecompensa(texto);
+  caixa.hidden = avisos.length === 0;
+  caixa.innerHTML = avisos.map(a => `
+    <p class="aviso-item ${a.nivel}"><span>${ICONE_NIVEL[a.nivel]}</span> ${escapar(a.texto)}</p>
+  `).join('');
+}
+
 function abrirEscolhaRecompensa(atividade, indice) {
   escolhaEmAberto = { atividade, indice };
   const lista = estado.recompensas || [];
@@ -399,7 +410,10 @@ function ligarEventos() {
     if (!texto) return;
     atualizar(() => { estado.recompensas.push(texto); });
     $('#nova-recompensa').value = '';
+    $('#avaliacao-recompensa').hidden = true;
   });
+
+  $('#nova-recompensa').addEventListener('input', evento => renderAvaliacao(evento.target.value));
 
   $('#lista-recompensas').addEventListener('click', evento => {
     const botao = evento.target.closest('[data-remover-recompensa]');

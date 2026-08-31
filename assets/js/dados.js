@@ -75,3 +75,60 @@ function iconeSugerido(titulo) {
   const achado = ICONES.find(item => item.palavras.some(palavra => nome.includes(palavra)));
   return achado ? achado.icone : '🎯';
 }
+
+/* Verificação simples da recompensa: procura termos conhecidos e devolve avisos.
+   É uma checagem por palavras, não um julgamento — a decisão continua do usuário. */
+const CHECAGENS = [
+  {
+    nivel: 'alerta',
+    texto: 'Isso desfaz o esforço que você acabou de fazer. Recompensa não pode contradizer o objetivo.',
+    termos: ['faltar', 'matar aula', 'pular treino', 'não estudar', 'nao estudar', 'não treinar',
+             'nao treinar', 'largar', 'desistir', 'parar de']
+  },
+  {
+    nivel: 'alerta',
+    texto: 'Gasto alto para uma recompensa que se repete a cada ponto. Guarde para quando o círculo fechar, ou combine o valor antes.',
+    termos: ['comprar', 'compra ', 'celular', 'iphone', 'ipad', 'videogame', 'console', 'playstation',
+             'xbox', 'notebook', 'tênis', 'tenis', 'drone', 'r$', 'reais', 'dinheiro', 'mesada', 'viagem']
+  },
+  {
+    nivel: 'atencao',
+    texto: 'Atenção à saúde: melhor deixar como algo ocasional, não a cada ponto.',
+    termos: ['refrigerante', 'doce', 'chocolate', 'fast food', 'hambúrguer', 'hamburguer', 'açúcar',
+             'acucar', 'cerveja', 'álcool', 'alcool', 'cigarro', 'energético', 'energetico',
+             'virar a noite', 'madrugada', 'balada']
+  },
+  {
+    nivel: 'atencao',
+    texto: 'Sem limite definido. Combine um tempo (ex.: uma hora) para não virar o dia inteiro.',
+    termos: ['o dia inteiro', 'sem limite', 'ilimitado', 'quanto quiser', 'a noite toda', 'o quanto eu']
+  },
+  {
+    nivel: 'bom',
+    texto: 'Custo baixo ou nenhum, e não atrapalha a rotina.',
+    termos: ['cinema', 'filme', 'série', 'serie', 'jogo', 'jogar', 'parque', 'praia', 'amigos', 'amigo',
+             'dormir', 'música', 'musica', 'futebol', 'bicicleta', 'pedalar', 'passear', 'ler',
+             'descansar', 'piscina', 'sorvete', 'lanche', 'pizza', 'skate', 'praia']
+  }
+];
+
+function avaliarRecompensa(texto) {
+  const nome = texto.toLowerCase().trim();
+  if (!nome) return [];
+
+  let avisos = CHECAGENS
+    .filter(c => c.termos.some(t => nome.includes(t)))
+    .map(c => ({ nivel: c.nivel, texto: c.texto }));
+
+  /* Havendo ressalva, o elogio some: não faz sentido dizer que está tudo bem e alertar ao mesmo tempo. */
+  if (avisos.some(a => a.nivel !== 'bom')) avisos = avisos.filter(a => a.nivel !== 'bom');
+
+  if (nome.length < 4 || ['prêmio', 'premio', 'algo bom', 'alguma coisa', 'presente'].includes(nome)) {
+    avisos.unshift({ nivel: 'atencao', texto: 'Muito vago. Descreva o que é, senão na hora não vale como recompensa.' });
+  }
+
+  if (!avisos.length) {
+    avisos.push({ nivel: 'neutro', texto: 'Não encontrei problema. Confira você mesmo: cabe no bolso, faz bem e não atrapalha o objetivo?' });
+  }
+  return avisos;
+}

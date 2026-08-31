@@ -410,3 +410,25 @@ input:focus, textarea:focus { outline: 2px solid var(--acento); outline-offset: 
 
 .recompensa-opcao:hover { border-color: var(--acento); }
 .recompensa-opcao.escolhida { border-color: var(--acento); background: color-mix(in srgb, var(--acento) 16%, var(--fundo-alt)); font-weight: 600; }
+
+/* ---------- Avaliação da recompensa ---------- */
+
+.avaliacao { margin-top: 12px; display: grid; gap: 8px; }
+
+.aviso-item {
+  margin: 0;
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+  font-size: .8rem;
+  line-height: 1.45;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid var(--borda);
+  background: var(--fundo-alt);
+  color: var(--texto-suave);
+}
+
+.aviso-item.alerta { border-color: var(--perigo); color: var(--texto); }
+.aviso-item.atencao { border-color: var(--acento-2); color: var(--texto); }
+.aviso-item.bom { border-color: var(--sucesso); }
