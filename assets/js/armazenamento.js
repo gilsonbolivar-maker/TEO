@@ -30,26 +30,21 @@ function somarDias(iso, dias) {
   return dataParaISO(d);
 }
 
-function modulosVazios() {
-  const vazio = {};
-  MODULOS.forEach(mod => {
-    vazio[mod.id] = {};
-    mod.campos.forEach(campo => { vazio[mod.id][campo.id] = ''; });
-  });
-  return vazio;
+function pontosVazios() {
+  return Array.from({ length: PONTOS_POR_ATIVIDADE }, () => ({ titulo: '', concluido: false, em: '' }));
 }
 
-function normalizarModulos(bruto) {
-  const limpo = modulosVazios();
-  if (!bruto || typeof bruto !== 'object') return limpo;
-  MODULOS.forEach(mod => {
-    const guardado = bruto[mod.id];
-    if (!guardado || typeof guardado !== 'object') return;
-    mod.campos.forEach(campo => {
-      if (typeof guardado[campo.id] === 'string') limpo[mod.id][campo.id] = guardado[campo.id];
-    });
+/* Sempre devolve exatamente 5 pontos, completando ou cortando o que vier salvo. */
+function normalizarPontos(bruto) {
+  const lista = Array.isArray(bruto) ? bruto : [];
+  return Array.from({ length: PONTOS_POR_ATIVIDADE }, (_, i) => {
+    const p = lista[i] || {};
+    return {
+      titulo: typeof p.titulo === 'string' ? p.titulo : '',
+      concluido: p.concluido === true,
+      em: typeof p.em === 'string' ? p.em : ''
+    };
   });
-  return limpo;
 }
 
 function estadoInicial() {
@@ -111,12 +106,9 @@ function normalizar(estado) {
       titulo: a.titulo,
       icone: a.icone || '📌',
       nota: typeof a.nota === 'string' ? a.nota : '',
-      atual: Number(a.atual) || 0,
-      meta: Number(a.meta) || 0,
-      unidade: typeof a.unidade === 'string' ? a.unidade : '',
       concluida: a.concluida === true,
       atualizadoEm: a.atualizadoEm || hojeISO(),
-      modulos: normalizarModulos(a.modulos)
+      pontos: normalizarPontos(a.pontos)
     }));
 
   Object.keys(limpo.registros).forEach(dia => {

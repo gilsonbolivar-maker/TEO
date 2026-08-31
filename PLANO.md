@@ -98,25 +98,23 @@ Dias ruins são previstos pelo programa, não exceções a ele.
 
 ---
 
-## 6.1 As atividades e seus 5 módulos
+## 6.1 As atividades e o círculo de 5 pontos
 
-Hábito é o que se repete todo dia. **Atividade** é o que atravessa semanas: um livro, um curso, um projeto. Cada atividade do quadro "Continuar de onde parei" se estrutura em cinco módulos, liberados um a um — o seguinte abre quando o anterior recebe alguma coisa.
+Hábito é o que se repete todo dia. **Atividade** é um objetivo específico que atravessa semanas: um livro, um curso, um projeto, uma prova.
 
-| # | Módulo | Pergunta que responde | Campos |
-|---|---|---|---|
-| 1 | **O Início** | Por que isso importa e quando estará pronto? | Meu motivo em uma frase · Linha de chegada |
-| 2 | **Os Primeiros Passos** | Como saio do zero ainda hoje? | Primeiro passo de 15 min · Data de início · O que preciso ter em mãos |
-| 3 | **O Ritmo** | Como isso vira rotina? | Dose e frequência · Quando no dia · Modo mínimo |
-| 4 | **Os Obstáculos** | Como eu não desisto? | O que costuma me fazer largar · Se… então… · Quem me cobra |
-| 5 | **A Chegada** | Como termina e o que eu ganho? | Marcos · Prova de conclusão · Recompensa · O que aprendi |
+Cada atividade é dividida em **5 pontos**, definidos por quem faz. Cada ponto vale **20%** e acende uma fatia do círculo. Quando os cinco acendem, o círculo fecha e o objetivo está concluído.
 
-Por que estes cinco:
+Na página inicial a lista mostra o nome de cada atividade com uma **régua de progresso** embaixo — dá para ver em um segundo o quanto já andou em cada frente. Tocando na atividade, abre o círculo, a anotação de onde parou e os cinco pontos.
 
-- **A linha de chegada (1)** é o que impede a atividade de se arrastar sem fim: sem definição de pronto, nada fica pronto.
-- **O primeiro passo de 15 minutos (2)** existe para matar o adiamento; se o primeiro passo é grande, ele nunca acontece.
-- **O modo mínimo (3)** é a ponte com o protocolo de dia ruim (§6): mantém a corrente viva quando a vontade some.
-- **O "se… então…" (4)** é decidido com a cabeça fria, antes da crise — vale muito mais que força de vontade no dia ruim.
-- **A prova de conclusão (5)** dá um fim visível ao ciclo; sem isso, a atividade não termina, ela apenas some.
+**Como dividir bem os 5 pontos:**
+
+- Cada ponto precisa ser **verificável**: dá para responder sim ou não. *"Chegar na página 80"* serve; *"estudar mais"* não.
+- Os pontos devem ser **mais ou menos do mesmo tamanho** — se o ponto 5 vale três meses e o ponto 1 vale uma tarde, a régua mente.
+- O **ponto 1 é o de sair do zero**: pequeno de propósito, feito na primeira semana. Sair de 0% para 20% é o que dá tração.
+- O **ponto 5 é a prova de conclusão**: o resumo escrito, a música tocada, a prova feita. Sem prova, a atividade não termina — ela apenas some.
+- Se você não consegue dividir em cinco, o objetivo provavelmente está grande demais: quebre em duas atividades.
+
+Concluir uma atividade rende as medalhas *Terminei* e, na quinta, *Maratonista*.
 
 ## 7. Ritual semanal (domingo, 15 minutos)
 

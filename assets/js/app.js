@@ -225,9 +225,17 @@ function renderAjustes() {
     .join('') || '<p class="legenda">Todas as sugestões já estão na sua lista.</p>';
 }
 
-/* ---------- Quadro "continuar de onde parei" ---------- */
+/* ---------- Quadro de atividades: 5 pontos, cada um vale 20% ---------- */
 
-let atividadeEditando = null;
+const atividadesAbertas = new Set();
+
+function pontosConcluidos(atividade) {
+  return atividade.pontos.filter(p => p.concluido).length;
+}
+
+function percentualAtividade(atividade) {
+  return Math.round(pontosConcluidos(atividade) * PESO_DO_PONTO);
+}
 
 function diasParado(atividade) {
   const d = Math.round((isoParaData(hoje) - isoParaData(atividade.atualizadoEm)) / 86400000);
@@ -235,93 +243,86 @@ function diasParado(atividade) {
 }
 
 function textoParado(dias) {
-  if (dias === 0) return 'hoje';
-  if (dias === 1) return 'ontem';
+  if (dias === 0) return 'avançou hoje';
+  if (dias === 1) return 'avançou ontem';
   return `parado há ${dias} dias`;
 }
 
-/* Um módulo conta como preenchido quando tem pelo menos um campo escrito. */
-function moduloPreenchido(atividade, mod) {
-  const dados = (atividade.modulos || {})[mod.id] || {};
-  return mod.campos.some(campo => (dados[campo.id] || '').trim() !== '');
-}
-
-function modulosPreenchidos(atividade) {
-  return MODULOS.filter(mod => moduloPreenchido(atividade, mod)).length;
-}
-
-/* O módulo seguinte só abre depois que o anterior recebe alguma coisa:
-   preencher cinco blocos de uma vez espanta qualquer um. */
-function moduloLiberado(atividade, indice) {
-  return indice === 0 || moduloPreenchido(atividade, MODULOS[indice - 1]);
-}
-
-const modulosAbertos = new Set();
-
-function campoModulo(atividade, mod, campo) {
-  const valor = ((atividade.modulos || {})[mod.id] || {})[campo.id] || '';
-  const comuns = `class="campo-modulo" data-modulo="${mod.id}" data-campo="${campo.id}" aria-label="${escapar(campo.rotulo)}"`;
-  const entrada = campo.tipo === 'date'
-    ? `<input type="date" ${comuns} value="${escapar(valor)}">`
-    : campo.linhas
-      ? `<textarea rows="${campo.linhas}" ${comuns} placeholder="${escapar(campo.dica || '')}">${escapar(valor)}</textarea>`
-      : `<input type="text" maxlength="120" ${comuns} value="${escapar(valor)}" placeholder="${escapar(campo.dica || '')}">`;
-  return `<label class="rotulo">${escapar(campo.rotulo)}</label>${entrada}`;
-}
-
-function blocoModulos(atividade) {
-  const total = modulosPreenchidos(atividade);
-  const corpo = MODULOS.map((mod, i) => {
-    const liberado = moduloLiberado(atividade, i);
-    const pronto = moduloPreenchido(atividade, mod);
-    return `
-      <div class="modulo ${liberado ? '' : 'travado'} ${pronto ? 'pronto' : ''}">
-        <p class="modulo-cabecalho">
-          <span class="modulo-num">${liberado ? mod.num : '🔒'}</span>
-          <strong>${escapar(mod.nome)}</strong>
-          ${pronto ? '<span class="modulo-marca">✓</span>' : ''}
-        </p>
-        <p class="modulo-resumo">${escapar(mod.resumo)}</p>
-        ${liberado
-          ? mod.campos.map(campo => campoModulo(atividade, mod, campo)).join('')
-          : `<p class="modulo-aviso">Preencha <strong>${escapar(MODULOS[i - 1].nome)}</strong> para abrir este módulo.</p>`}
-      </div>`;
-  }).join('');
+/* Círculo dividido em 5 fatias iguais; cada ponto concluído acende a sua. */
+function circuloDePontos(atividade) {
+  const raio = 42;
+  const volta = 2 * Math.PI * raio;
+  const fatia = volta / PONTOS_POR_ATIVIDADE;
+  const vao = 5;
+  const arcos = atividade.pontos.map((ponto, i) => `
+    <circle cx="50" cy="50" r="${raio}" fill="none"
+      class="fatia ${ponto.concluido ? 'acesa' : ''}"
+      stroke-width="9" stroke-linecap="round"
+      stroke-dasharray="${(fatia - vao).toFixed(2)} ${(volta - fatia + vao).toFixed(2)}"
+      stroke-dashoffset="${(-i * fatia).toFixed(2)}"
+      transform="rotate(-90 50 50)"></circle>`).join('');
 
   return `
-    <details class="modulos" data-modulos="${atividade.id}" ${modulosAbertos.has(atividade.id) ? 'open' : ''}>
-      <summary>Módulos · ${total} de ${MODULOS.length} preenchidos</summary>
-      ${corpo}
-    </details>`;
+    <svg class="circulo" viewBox="0 0 100 100" role="img"
+         aria-label="${percentualAtividade(atividade)} por cento concluído">
+      ${arcos}
+      <text x="50" y="47" class="circulo-pct">${percentualAtividade(atividade)}%</text>
+      <text x="50" y="62" class="circulo-frac">${pontosConcluidos(atividade)} de ${PONTOS_POR_ATIVIDADE}</text>
+    </svg>`;
+}
+
+function listaDePontos(atividade) {
+  return atividade.pontos.map((ponto, i) => `
+    <li class="ponto ${ponto.concluido ? 'feito' : ''}">
+      <button class="ponto-marca" data-acao="alternar-ponto" data-indice="${i}"
+              ${ponto.titulo.trim() ? '' : 'disabled'}
+              title="${ponto.concluido ? 'Desmarcar' : 'Marcar como concluído'}">
+        ${ponto.concluido ? '✓' : i + 1}
+      </button>
+      <input class="ponto-titulo" data-indice="${i}" type="text" maxlength="80"
+             value="${escapar(ponto.titulo)}"
+             placeholder="Ponto ${i + 1}: o que precisa acontecer"
+             aria-label="Nome do ponto ${i + 1}">
+      <span class="ponto-peso">${ponto.concluido ? escapar(ponto.em) : PESO_DO_PONTO + '%'}</span>
+    </li>`).join('');
 }
 
 function cartaoAtividade(a, concluida) {
+  const pct = percentualAtividade(a);
+  const aberta = atividadesAbertas.has(a.id);
   const dias = diasParado(a);
-  const pct = a.meta > 0 ? Math.min(100, Math.round((a.atual / a.meta) * 100)) : 0;
-  const unidade = a.unidade ? ' ' + escapar(a.unidade) : '';
   return `
-    <li class="atividade" data-atividade="${a.id}">
-      <div class="atividade-topo">
+    <li class="atividade ${concluida ? 'fechada' : ''}" data-atividade="${a.id}">
+      <button class="atividade-cabecalho" data-acao="abrir" aria-expanded="${aberta}">
         <span class="atividade-icone">${escapar(a.icone)}</span>
-        <span class="atividade-titulo">${escapar(a.titulo)}</span>
-        <span class="atividade-modulos">${modulosPreenchidos(a)}/${MODULOS.length}</span>
-        ${concluida ? '' : `<span class="atividade-parado ${dias >= 3 ? 'alerta' : ''}">${textoParado(dias)}</span>`}
+        <span class="atividade-info">
+          <span class="atividade-titulo">${escapar(a.titulo)}</span>
+          <span class="regua"><span style="width:${pct}%"></span></span>
+        </span>
+        <span class="atividade-pct">${pct}%</span>
+      </button>
+
+      <div class="atividade-detalhe" ${aberta ? '' : 'hidden'}>
+        <div class="detalhe-topo">
+          ${circuloDePontos(a)}
+          <div class="detalhe-lado">
+            <p class="detalhe-parado">${concluida ? 'Objetivo concluído 🏁' : textoParado(dias)}</p>
+            <label class="rotulo">Onde parei</label>
+            <input class="atividade-nota-campo" type="text" maxlength="90"
+                   value="${escapar(a.nota)}" placeholder="Ex.: capítulo 7, página 120"
+                   aria-label="Onde parei">
+          </div>
+        </div>
+
+        <p class="legenda">Os 5 pontos até concluir — cada um fecha ${PESO_DO_PONTO}% do círculo.</p>
+        <ul class="lista-pontos">${listaDePontos(a)}</ul>
+
+        <div class="atividade-acoes">
+          ${concluida ? '<button data-acao="reabrir">Reabrir</button>' : ''}
+          <button data-acao="remover">Remover</button>
+        </div>
       </div>
-      <p class="atividade-nota ${a.nota ? '' : 'vazia'}">${a.nota ? escapar(a.nota) : 'Sem anotação de onde parou.'}</p>
-      ${a.meta > 0 ? `
-        <div class="atividade-progresso">
-          <div class="trilha"><div style="width:${pct}%"></div></div>
-          <span class="numeros">${a.atual}/${a.meta}${unidade} · ${pct}%</span>
-        </div>` : ''}
-      ${blocoModulos(a)}
-      <div class="atividade-acoes">
-        ${concluida
-          ? '<button data-acao="reabrir">Reabrir</button>'
-          : '<button data-acao="continuar">Continuar</button><button data-acao="concluir">Concluir</button>'}
-        <button data-acao="remover">Remover</button>
-      </div>
-    </li>
-  `;
+    </li>`;
 }
 
 function renderAtividades() {
@@ -329,8 +330,8 @@ function renderAtividades() {
   const abertas = todas.filter(a => !a.concluida);
   const feitas = todas.filter(a => a.concluida);
 
-  /* As paradas há mais tempo aparecem primeiro: são as que precisam de atenção. */
-  abertas.sort((a, b) => diasParado(b) - diasParado(a));
+  /* Mais avançadas primeiro; empatadas, as paradas há mais tempo sobem. */
+  abertas.sort((a, b) => percentualAtividade(b) - percentualAtividade(a) || diasParado(b) - diasParado(a));
 
   $('#lista-atividades').innerHTML = abertas.map(a => cartaoAtividade(a, false)).join('');
   $('#atividades-vazio').hidden = abertas.length > 0;
@@ -340,119 +341,93 @@ function renderAtividades() {
   $('#lista-concluidas').innerHTML = feitas.map(a => cartaoAtividade(a, true)).join('');
 }
 
-function abrirFormAtividade(atividade) {
-  atividadeEditando = atividade ? atividade.id : null;
-  $('#atv-icone').value = atividade ? atividade.icone : '📌';
-  $('#atv-titulo').value = atividade ? atividade.titulo : '';
-  $('#atv-nota').value = atividade ? atividade.nota : '';
-  $('#atv-atual').value = atividade && atividade.atual ? atividade.atual : '';
-  $('#atv-meta').value = atividade && atividade.meta ? atividade.meta : '';
-  $('#atv-unidade').value = atividade ? atividade.unidade : '';
-  $('#form-atividade').hidden = false;
-  $('#atv-titulo').focus();
-}
-
-function fecharFormAtividade() {
-  atividadeEditando = null;
-  $('#form-atividade').hidden = true;
-  $('#form-atividade').reset();
-}
-
 function ligarEventosAtividades() {
   $('#botao-nova-atividade').addEventListener('click', () => {
-    if (!$('#form-atividade').hidden && atividadeEditando === null) fecharFormAtividade();
-    else abrirFormAtividade(null);
+    const form = $('#form-atividade');
+    form.hidden = !form.hidden;
+    if (!form.hidden) $('#atv-titulo').focus();
   });
 
-  $('#botao-cancelar-atividade').addEventListener('click', fecharFormAtividade);
+  $('#botao-cancelar-atividade').addEventListener('click', () => {
+    $('#form-atividade').hidden = true;
+    $('#form-atividade').reset();
+  });
 
   $('#form-atividade').addEventListener('submit', evento => {
     evento.preventDefault();
     const titulo = $('#atv-titulo').value.trim();
     if (!titulo) return;
-    const dados = {
+    const novo = {
+      id: idNovo(),
       titulo,
       icone: $('#atv-icone').value.trim() || '📌',
-      nota: $('#atv-nota').value.trim(),
-      atual: Math.max(0, Number($('#atv-atual').value) || 0),
-      meta: Math.max(0, Number($('#atv-meta').value) || 0),
-      unidade: $('#atv-unidade').value.trim(),
-      atualizadoEm: hoje
+      nota: '',
+      concluida: false,
+      atualizadoEm: hoje,
+      pontos: pontosVazios()
     };
-    const emEdicao = atividadeEditando;
-    atualizar(() => {
-      const existente = (estado.atividades || []).find(a => a.id === emEdicao);
-      if (existente) Object.assign(existente, dados);
-      else estado.atividades.push({ id: idNovo(), concluida: false, modulos: modulosVazios(), ...dados });
-    });
-    avisar(emEdicao ? 'Atividade atualizada.' : 'Atividade adicionada.');
-    fecharFormAtividade();
+    atualizar(() => { estado.atividades.push(novo); });
+    atividadesAbertas.add(novo.id);
+    renderAtividades();
+    $('#form-atividade').hidden = true;
+    $('#form-atividade').reset();
+    avisar('Atividade criada. Defina os 5 pontos.');
   });
 
-  /* Salva enquanto digita, para nada se perder se o app for fechado no meio.
-     A tela só é redesenhada ao sair do campo, para não atrapalhar a digitação. */
-  function gravarCampoModulo(campo) {
-    const item = campo.closest('[data-atividade]');
-    if (!item) return null;
-    const atividade = (estado.atividades || []).find(a => a.id === item.dataset.atividade);
-    if (!atividade) return null;
-    atividade.modulos[campo.dataset.modulo][campo.dataset.campo] = campo.value;
-    atividade.atualizadoEm = hoje;
-    persistir();
-
-    /* Atualiza só os contadores: redesenhar a lista inteira tiraria o foco do campo. */
-    const feitos = modulosPreenchidos(atividade);
-    const resumo = item.querySelector('.modulos > summary');
-    const marcador = item.querySelector('.atividade-modulos');
-    if (resumo) resumo.textContent = `Módulos · ${feitos} de ${MODULOS.length} preenchidos`;
-    if (marcador) marcador.textContent = `${feitos}/${MODULOS.length}`;
-    return atividade;
-  }
-
+  /* Digitação: nome dos pontos e anotação de onde parou salvam a cada tecla. */
   document.addEventListener('input', evento => {
-    const campo = evento.target.closest('.campo-modulo');
-    if (campo) gravarCampoModulo(campo);
+    const item = evento.target.closest('[data-atividade]');
+    if (!item) return;
+    const atividade = (estado.atividades || []).find(a => a.id === item.dataset.atividade);
+    if (!atividade) return;
+
+    if (evento.target.classList.contains('ponto-titulo')) {
+      atividade.pontos[Number(evento.target.dataset.indice)].titulo = evento.target.value;
+      persistir();
+    } else if (evento.target.classList.contains('atividade-nota-campo')) {
+      atividade.nota = evento.target.value;
+      atividade.atualizadoEm = hoje;
+      persistir();
+    }
   });
 
+  /* Ao sair do campo, redesenha para liberar o botão de concluir do ponto nomeado. */
   document.addEventListener('change', evento => {
-    const campo = evento.target.closest('.campo-modulo');
-    if (campo && gravarCampoModulo(campo)) renderAtividades();
+    if (evento.target.closest('.ponto-titulo, .atividade-nota-campo')) renderAtividades();
   });
-
-  document.addEventListener('toggle', evento => {
-    const bloco = evento.target.closest('[data-modulos]');
-    if (!bloco) return;
-    if (bloco.open) modulosAbertos.add(bloco.dataset.modulos);
-    else modulosAbertos.delete(bloco.dataset.modulos);
-  }, true);
 
   document.addEventListener('click', evento => {
-    const botao = evento.target.closest('.atividade-acoes [data-acao]');
-    if (!botao) return;
-    const id = botao.closest('[data-atividade]').dataset.atividade;
+    const gatilho = evento.target.closest('[data-acao]');
+    if (!gatilho) return;
+    const item = gatilho.closest('[data-atividade]');
+    if (!item) return;
+    const id = item.dataset.atividade;
     const atividade = (estado.atividades || []).find(a => a.id === id);
     if (!atividade) return;
-    const acao = botao.dataset.acao;
+    const acao = gatilho.dataset.acao;
 
-    if (acao === 'continuar') {
-      abrirFormAtividade(atividade);
-      $('#form-atividade').scrollIntoView({ behavior: 'smooth', block: 'center' });
-    } else if (acao === 'concluir') {
+    if (acao === 'abrir') {
+      if (atividadesAbertas.has(id)) atividadesAbertas.delete(id);
+      else atividadesAbertas.add(id);
+      renderAtividades();
+
+    } else if (acao === 'alternar-ponto') {
+      const ponto = atividade.pontos[Number(gatilho.dataset.indice)];
       atualizar(() => {
-        atividade.concluida = true;
+        ponto.concluido = !ponto.concluido;
+        ponto.em = ponto.concluido ? isoParaData(hoje).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' }) : '';
         atividade.atualizadoEm = hoje;
-        if (atividade.meta > 0) atividade.atual = atividade.meta;
+        /* O círculo fechou: a atividade se conclui sozinha. */
+        atividade.concluida = pontosConcluidos(atividade) === PONTOS_POR_ATIVIDADE;
       });
-      avisar('🏁 Atividade concluída!');
+      if (atividade.concluida) avisar('🏁 Círculo fechado! Objetivo concluído.');
+      else if (ponto.concluido) avisar(`+${PESO_DO_PONTO}% · ${percentualAtividade(atividade)}% do círculo`);
+
     } else if (acao === 'reabrir') {
-      atualizar(() => {
-        atividade.concluida = false;
-        atividade.atualizadoEm = hoje;
-      });
-    } else if (acao === 'remover' && confirm(`Remover "${atividade.titulo}" do quadro?`)) {
-      atualizar(() => {
-        estado.atividades = estado.atividades.filter(a => a.id !== id);
-      });
+      atualizar(() => { atividade.concluida = false; atividade.atualizadoEm = hoje; });
+
+    } else if (acao === 'remover' && confirm(`Remover "${atividade.titulo}"?`)) {
+      atualizar(() => { estado.atividades = estado.atividades.filter(a => a.id !== id); });
       avisar('Atividade removida.');
     }
   });

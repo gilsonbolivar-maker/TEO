@@ -462,13 +462,14 @@ input:focus, textarea:focus { outline: 2px solid var(--acento); outline-offset: 
 .passos { margin: 12px 0 10px; padding-left: 20px; font-size: .88rem; display: grid; gap: 6px; }
 .passos li { padding-left: 2px; }
 
-/* ---------- Quadro "continuar de onde parei" ---------- */
+
+/* ---------- Quadro de atividades ---------- */
 
 .botao.compacto { padding: 7px 12px; font-size: .82rem; white-space: nowrap; }
 
 .form-atividade {
   display: grid;
-  gap: 8px;
+  gap: 10px;
   padding: 14px;
   margin-bottom: 14px;
   border: 1px dashed var(--borda);
@@ -477,49 +478,86 @@ input:focus, textarea:focus { outline: 2px solid var(--acento); outline-offset: 
 }
 
 .linha-campos { display: flex; gap: 8px; align-items: center; }
-.linha-campos input[type="text"]:not(.campo-icone):not(.campo-unidade) { flex: 1; min-width: 0; }
-.campo-num { width: 84px; flex-shrink: 0; }
-.campo-unidade { width: 110px; flex-shrink: 0; }
-.separador { color: var(--texto-suave); font-size: .85rem; }
+.linha-campos input[type="text"]:not(.campo-icone) { flex: 1; min-width: 0; }
 
 .lista-atividades { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
 
 .atividade {
   border: 1px solid var(--borda);
-  border-left: 3px solid var(--acento);
   border-radius: 12px;
-  padding: 12px 14px;
   background: var(--fundo-alt);
+  overflow: hidden;
 }
 
-.atividade-topo { display: flex; align-items: center; gap: 10px; }
-.atividade-icone { font-size: 1.2rem; }
-.atividade-titulo { flex: 1; font-weight: 600; }
-
-.atividade-parado {
-  font-size: .7rem;
-  color: var(--texto-suave);
-  white-space: nowrap;
-  padding: 2px 8px;
-  border-radius: 999px;
-  background: var(--borda);
-}
-
-.atividade-parado.alerta { color: #17110b; background: var(--acento-2); font-weight: 600; }
-
-.atividade-nota { margin: 8px 0 0; font-size: .88rem; color: var(--texto-suave); }
-.atividade-nota.vazia { font-style: italic; opacity: .7; }
-
-.atividade-progresso { display: flex; align-items: center; gap: 10px; margin-top: 10px; }
-.atividade-progresso .trilha { flex: 1; }
-.atividade-progresso .numeros { font-size: .78rem; color: var(--texto-suave); white-space: nowrap; }
-
-.atividade-acoes { display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
-
-.atividade-acoes button {
-  border: 1px solid var(--borda);
+.atividade-cabecalho {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px;
+  border: 0;
   background: transparent;
   color: var(--texto);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.atividade-cabecalho:hover { background: color-mix(in srgb, var(--acento) 6%, transparent); }
+.atividade-icone { font-size: 1.35rem; flex-shrink: 0; }
+.atividade-info { flex: 1; min-width: 0; display: grid; gap: 7px; }
+.atividade-titulo { font-weight: 600; font-size: .96rem; }
+
+/* A régua de progresso sob o nome da atividade. */
+.regua { display: block; height: 7px; border-radius: 999px; background: var(--borda); overflow: hidden; }
+.regua > span { display: block; height: 100%; border-radius: 999px; background: linear-gradient(90deg, var(--acento), var(--acento-2)); transition: width .45s ease; }
+
+.atividade-pct { font-size: .95rem; font-weight: 700; color: var(--acento); flex-shrink: 0; min-width: 44px; text-align: right; }
+
+.atividade-detalhe { padding: 0 14px 14px; border-top: 1px solid var(--borda); }
+
+.detalhe-topo { display: flex; align-items: center; gap: 16px; padding-top: 14px; }
+.detalhe-lado { flex: 1; min-width: 0; }
+.detalhe-parado { margin: 0 0 6px; font-size: .78rem; color: var(--texto-suave); }
+
+/* Círculo de 5 fatias. */
+.circulo { width: 118px; height: 118px; flex-shrink: 0; }
+.circulo .fatia { stroke: var(--borda); transition: stroke .35s ease; }
+.circulo .fatia.acesa { stroke: var(--acento); }
+.circulo-pct { font-size: 20px; font-weight: 700; fill: var(--texto); text-anchor: middle; }
+.circulo-frac { font-size: 8.5px; fill: var(--texto-suave); text-anchor: middle; }
+
+.lista-pontos { list-style: none; margin: 8px 0 0; padding: 0; display: grid; gap: 8px; }
+
+.ponto { display: flex; align-items: center; gap: 10px; }
+
+.ponto-marca {
+  width: 30px; height: 30px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  border: 2px solid var(--borda);
+  background: transparent;
+  color: var(--texto-suave);
+  font: inherit;
+  font-size: .8rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.ponto-marca:hover:not(:disabled) { border-color: var(--acento); color: var(--acento); }
+.ponto-marca:disabled { opacity: .4; cursor: not-allowed; }
+.ponto.feito .ponto-marca { background: var(--acento); border-color: var(--acento); color: #17110b; }
+
+.ponto-titulo { flex: 1; min-width: 0; font-size: .88rem; padding: 8px 10px; }
+.ponto.feito .ponto-titulo { color: var(--texto-suave); text-decoration: line-through; }
+.ponto-peso { font-size: .72rem; color: var(--texto-suave); width: 40px; text-align: right; flex-shrink: 0; }
+
+.atividade-acoes { display: flex; gap: 8px; margin-top: 14px; justify-content: flex-end; }
+
+.atividade-acoes button {
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--texto-suave);
   border-radius: 8px;
   padding: 6px 12px;
   font: inherit;
@@ -527,62 +565,17 @@ input:focus, textarea:focus { outline: 2px solid var(--acento); outline-offset: 
   cursor: pointer;
 }
 
-.atividade-acoes button:hover { border-color: var(--acento); }
-.atividade-acoes button[data-acao="continuar"] { background: var(--acento); border-color: var(--acento); color: #17110b; font-weight: 600; }
-.atividade-acoes button[data-acao="remover"] { color: var(--perigo); border-color: transparent; }
+.atividade-acoes button:hover { color: var(--perigo); border-color: var(--perigo); }
+.atividade-acoes button[data-acao="reabrir"]:hover { color: var(--texto); border-color: var(--borda); }
+
+.atividade.fechada .atividade-titulo { text-decoration: line-through; color: var(--texto-suave); }
+.atividade.fechada .regua > span { background: var(--sucesso); }
 
 .concluidas { margin-top: 14px; }
 .concluidas summary { cursor: pointer; font-size: .82rem; color: var(--texto-suave); }
 .concluidas-lista { margin-top: 10px; }
-.concluidas-lista .atividade { border-left-color: var(--sucesso); opacity: .65; }
-.concluidas-lista .atividade-titulo { text-decoration: line-through; }
 
-/* ---------- Módulos da atividade ---------- */
-
-.atividade-modulos {
-  font-size: .7rem;
-  font-weight: 700;
-  color: var(--texto-suave);
-  padding: 2px 8px;
-  border-radius: 999px;
-  border: 1px solid var(--borda);
-  white-space: nowrap;
+@media (max-width: 400px) {
+  .detalhe-topo { flex-direction: column; align-items: stretch; gap: 10px; }
+  .circulo { align-self: center; }
 }
-
-.modulos { margin-top: 12px; }
-
-.modulos > summary {
-  cursor: pointer;
-  font-size: .8rem;
-  font-weight: 600;
-  color: var(--acento);
-  padding: 6px 0;
-}
-
-.modulo {
-  border-top: 1px solid var(--borda);
-  padding: 12px 0 4px;
-}
-
-.modulo-cabecalho { display: flex; align-items: center; gap: 8px; margin: 0; font-size: .92rem; }
-
-.modulo-num {
-  width: 22px; height: 22px;
-  flex-shrink: 0;
-  border-radius: 50%;
-  display: grid; place-items: center;
-  font-size: .72rem; font-weight: 700;
-  background: var(--borda);
-  color: var(--texto-suave);
-}
-
-.modulo.pronto .modulo-num { background: var(--acento); color: #17110b; }
-.modulo-marca { color: var(--sucesso); font-weight: 700; }
-.modulo-resumo { margin: 4px 0 8px; font-size: .76rem; color: var(--texto-suave); }
-
-.modulo.travado { opacity: .55; }
-.modulo.travado .modulo-num { background: transparent; font-size: .8rem; }
-.modulo-aviso { margin: 6px 0 4px; font-size: .78rem; color: var(--texto-suave); }
-
-.modulo .rotulo { margin: 10px 0 4px; font-size: .76rem; }
-.modulo input, .modulo textarea { font-size: .88rem; padding: 8px 10px; }

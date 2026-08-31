@@ -97,51 +97,6 @@ const CONQUISTAS = [
   { id: 'maratonista',    icone: '📕', nome: 'Maratonista',       desc: 'Concluir 5 atividades do quadro "continuar".', teste: e => e.atividadesConcluidas >= 5 }
 ];
 
-/* Os 5 módulos que estruturam cada atividade do quadro "continuar de onde parei". */
-const MODULOS = [
-  {
-    id: 'inicio', num: 1, nome: 'O Início',
-    resumo: 'Por que isso importa e quando estará pronto.',
-    campos: [
-      { id: 'motivo',  rotulo: 'Meu motivo, em uma frase', dica: 'Por que isso importa pra mim', linhas: 2 },
-      { id: 'chegada', rotulo: 'Linha de chegada',         dica: 'O que conta como terminado', linhas: 2 }
-    ]
-  },
-  {
-    id: 'passos', num: 2, nome: 'Os Primeiros Passos',
-    resumo: 'Como sair do zero ainda hoje.',
-    campos: [
-      { id: 'primeiro', rotulo: 'O primeiro passo de 15 minutos', dica: 'Pequeno a ponto de ser ridículo não fazer' },
-      { id: 'data',     rotulo: 'Começo em',                      tipo: 'date' },
-      { id: 'material', rotulo: 'O que preciso ter em mãos',       dica: 'Livro, apostila, acesso, dinheiro' }
-    ]
-  },
-  {
-    id: 'ritmo', num: 3, nome: 'O Ritmo',
-    resumo: 'Como isso vira rotina.',
-    campos: [
-      { id: 'dose',   rotulo: 'Dose e frequência', dica: 'Ex.: 20 páginas, 3x por semana' },
-      { id: 'quando', rotulo: 'Quando, no dia',    dica: 'Ex.: depois do jantar' },
-      { id: 'minimo', rotulo: 'Modo mínimo (dia ruim)', dica: 'A versão de 2 minutos. Ex.: 1 página' }
-    ]
-  },
-  {
-    id: 'obstaculos', num: 4, nome: 'Os Obstáculos',
-    resumo: 'O que vai dar errado — decidido com a cabeça fria.',
-    campos: [
-      { id: 'risco',   rotulo: 'O que costuma me fazer largar', dica: 'Ex.: quando fica chato no meio', linhas: 2 },
-      { id: 'planoB',  rotulo: 'Se… então…',                    dica: 'Ex.: se eu perder dois dias, volto com 1 página', linhas: 2 },
-      { id: 'cobranca', rotulo: 'Quem me cobra',                dica: 'Uma pessoa que vai perguntar como está indo' }
-    ]
-  },
-  {
-    id: 'fim', num: 5, nome: 'A Chegada',
-    resumo: 'Como termina e o que eu ganho com isso.',
-    campos: [
-      { id: 'marcos',     rotulo: 'Marcos no caminho', dica: 'Três pontos de checagem até o fim', linhas: 2 },
-      { id: 'prova',      rotulo: 'Prova de conclusão', dica: 'O resumo, o vídeo, o certificado' },
-      { id: 'recompensa', rotulo: 'Recompensa combinada', dica: 'Definida agora, entregue no fim' },
-      { id: 'aprendi',    rotulo: 'O que aprendi / o que continua', dica: 'Preencha ao concluir', linhas: 2 }
-    ]
-  }
-];
+/* Cada atividade se divide em 5 pontos; cada ponto vale 20% do círculo. */
+const PONTOS_POR_ATIVIDADE = 5;
+const PESO_DO_PONTO = 100 / PONTOS_POR_ATIVIDADE;
