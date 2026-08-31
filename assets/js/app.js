@@ -11,6 +11,7 @@ const $$ = sel => Array.from(document.querySelectorAll(sel));
 
 const ABAS_FINAIS = [
   { id: 'progresso', rotulo: 'Progresso' },
+  { id: 'oracao', rotulo: 'Oração' },
   { id: 'ajustes', rotulo: 'Ajustes' }
 ];
 
@@ -268,6 +269,30 @@ function fecharEscolhaRecompensa() {
   $('#modal-recompensa').hidden = true;
 }
 
+/* ---------- Oração ---------- */
+
+function renderOracao() {
+  const escolhida = estado.oracao.escolhida;
+  const opcoes = ORACOES.map(o => ({ id: o.id, nome: o.nome }))
+    .concat([{ id: 'outra', nome: 'Outra — escrever a minha' }]);
+
+  $('#lista-oracoes').innerHTML = opcoes.map(o => `
+    <li><button class="oracao-opcao ${escolhida === o.id ? 'escolhida' : ''}" data-oracao="${o.id}">${escapar(o.nome)}</button></li>
+  `).join('');
+
+  const propria = escolhida === 'outra';
+  $('#oracao-propria').hidden = !propria;
+  if (propria && document.activeElement !== $('#campo-oracao')) {
+    $('#campo-oracao').value = estado.oracao.propria || '';
+  }
+
+  const texto = propria
+    ? (estado.oracao.propria || '').trim()
+    : (ORACOES.find(o => o.id === escolhida) || {}).texto || '';
+  $('#cartao-oracao-texto').hidden = !texto;
+  $('#oracao-texto').textContent = texto;
+}
+
 /* ---------- Render geral ---------- */
 
 function render() {
@@ -277,6 +302,7 @@ function render() {
   renderAtividades();
   renderProgresso();
   renderRecompensas();
+  renderOracao();
   if (abaAtual.startsWith('atv:')) renderPainelAtividade();
 
   const frase = fraseDoDia(hoje);
@@ -436,6 +462,24 @@ function ligarEventos() {
   $('#modal-fechar').addEventListener('click', fecharEscolhaRecompensa);
   $('#modal-recompensa').addEventListener('click', evento => {
     if (evento.target.id === 'modal-recompensa') fecharEscolhaRecompensa();
+  });
+
+  $('#lista-oracoes').addEventListener('click', evento => {
+    const botao = evento.target.closest('[data-oracao]');
+    if (!botao) return;
+    const id = botao.dataset.oracao;
+    atualizar(() => {
+      estado.oracao.escolhida = estado.oracao.escolhida === id ? '' : id;
+    });
+    if (estado.oracao.escolhida === 'outra') $('#campo-oracao').focus();
+  });
+
+  $('#campo-oracao').addEventListener('input', evento => {
+    estado.oracao.propria = evento.target.value;
+    persistir();
+    const texto = evento.target.value.trim();
+    $('#cartao-oracao-texto').hidden = !texto;
+    $('#oracao-texto').textContent = texto;
   });
 
   $('#campo-nome').addEventListener('input', evento => {
