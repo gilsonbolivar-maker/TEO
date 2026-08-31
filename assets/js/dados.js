@@ -133,38 +133,17 @@ function avaliarRecompensa(texto) {
   return avisos;
 }
 
-/* Orações para começar ou fechar o dia. A última opção é sempre a do próprio usuário. */
-const ORACOES = [
-  {
-    id: 'pai-nosso', nome: 'Pai-Nosso',
-    texto: 'Pai nosso que estais nos céus, santificado seja o vosso nome. Venha a nós o vosso reino, seja feita a vossa vontade, assim na terra como no céu. O pão nosso de cada dia nos dai hoje. Perdoai as nossas ofensas, assim como nós perdoamos a quem nos tem ofendido. E não nos deixeis cair em tentação, mas livrai-nos do mal. Amém.'
-  },
-  {
-    id: 'serenidade', nome: 'Oração da Serenidade',
-    texto: 'Concedei-me, Senhor, a serenidade necessária para aceitar as coisas que não posso modificar, coragem para modificar aquelas que posso e sabedoria para distinguir umas das outras. Amém.'
-  },
-  {
-    id: 'sao-francisco', nome: 'Oração de São Francisco',
-    texto: 'Senhor, fazei-me instrumento de vossa paz. Onde houver ódio, que eu leve o amor; onde houver ofensa, que eu leve o perdão; onde houver discórdia, que eu leve a união; onde houver dúvida, que eu leve a fé; onde houver desespero, que eu leve a esperança; onde houver trevas, que eu leve a luz. Amém.'
-  },
-  {
-    id: 'salmo-23', nome: 'Salmo 23',
-    texto: 'O Senhor é o meu pastor, nada me faltará. Ele me faz repousar em pastos verdejantes e me conduz a águas tranquilas; refrigera a minha alma. Ainda que eu ande pelo vale da sombra da morte, não temerei mal algum, porque tu estás comigo.'
-  },
-  {
-    id: 'antes-do-estudo', nome: 'Antes de estudar ou treinar',
-    texto: 'Senhor, dai-me clareza para entender, memória para guardar e disciplina para continuar quando a vontade faltar. Que o esforço de hoje me aproxime de quem eu quero ser. Amém.'
-  },
-  {
-    id: 'gratidao', nome: 'Gratidão pelo dia',
-    texto: 'Obrigado, Senhor, pelo dia que passou, pelo que consegui e também pelo que não consegui. Que eu aprenda com os dois e volte amanhã com a mesma vontade. Amém.'
-  },
-  {
-    id: 'anjo', nome: 'Santo Anjo',
-    texto: 'Santo Anjo do Senhor, meu zeloso guardador, se a ti me confiou a piedade divina, sempre me rege, guarda, governa e ilumina. Amém.'
-  },
-  {
-    id: 'coragem', nome: 'Pedido de coragem',
-    texto: 'Senhor, tira de mim o medo de começar e a pressa de desistir. Dai-me firmeza para dar hoje o passo que me cabe, por menor que ele pareça. Amém.'
-  }
+
+/* Sugestões de recompensa oferecidas ao usuário; a última opção é escrever a própria. */
+const RECOMPENSAS_SUGERIDAS = [
+  'Uma hora de jogo',
+  'Escolher o filme da noite',
+  'Sair com os amigos',
+  'Dormir até mais tarde no sábado',
+  'Escolher o jantar da família',
+  'Uma tarde livre, sem cobrança',
+  'Ir ao cinema',
+  'Passeio no parque ou na praia',
+  'Um livro novo',
+  'Lanche preferido no fim de semana'
 ];

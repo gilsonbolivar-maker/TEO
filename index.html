@@ -71,23 +71,6 @@
       </article>
     </section>
 
-    <!-- ORAÇÃO -->
-    <section class="painel" id="painel-oracao">
-      <article class="cartao">
-        <h2>Oração</h2>
-        <p class="legenda">Escolha a sua. A última opção é para escrever a que você quiser.</p>
-        <ul class="lista-oracoes" id="lista-oracoes"></ul>
-        <div id="oracao-propria" hidden>
-          <label class="rotulo" for="campo-oracao">Sua oração</label>
-          <textarea id="campo-oracao" rows="5" placeholder="Escreva aqui a oração que você quiser."></textarea>
-        </div>
-      </article>
-
-      <article class="cartao" id="cartao-oracao-texto" hidden>
-        <p class="oracao-texto" id="oracao-texto"></p>
-      </article>
-    </section>
-
     <!-- AJUSTES -->
     <section class="painel" id="painel-ajustes">
       <article class="cartao">
@@ -103,7 +86,10 @@
         <p class="legenda">A cada ponto concluído você escolhe uma destas. Cadastre o que vale a pena para você.</p>
         <ul class="lista-recompensas" id="lista-recompensas"></ul>
         <p class="vazio" id="recompensas-vazio">Nenhuma recompensa cadastrada ainda.</p>
-        <form id="form-recompensa">
+        <p class="rotulo">Opções para escolher</p>
+        <ul class="lista-opcoes" id="opcoes-recompensa"></ul>
+
+        <form id="form-recompensa" hidden>
           <div class="linha-botoes">
             <input id="nova-recompensa" type="text" maxlength="60" placeholder="O que você acha que merece?" required>
             <button type="submit" class="botao">Adicionar</button>

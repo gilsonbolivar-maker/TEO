@@ -49,7 +49,6 @@ function estadoInicial() {
     versao: 2,
     perfil: { nome: 'Teo Neto', objetivo: '', inicio: hojeISO() },
     recompensas: [],
-    oracao: { escolhida: '', propria: '' },
     atividades: []
   };
 }
@@ -80,7 +79,6 @@ function normalizar(estado) {
     recompensas: (Array.isArray(estado.recompensas) ? estado.recompensas : [])
       .filter(r => typeof r === 'string' && r.trim())
       .map(r => r.trim()),
-    oracao: Object.assign({}, base.oracao, estado.oracao || {}),
     atividades: (Array.isArray(estado.atividades) ? estado.atividades : [])
       .filter(a => a && typeof a.titulo === 'string')
       .map(a => ({
