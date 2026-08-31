@@ -313,3 +313,15 @@ input:focus, textarea:focus { outline: 2px solid var(--acento); outline-offset: 
   box-shadow: var(--sombra);
   z-index: 20;
 }
+
+.atividade-titulo-campo {
+  flex: 1;
+  min-width: 0;
+  font-size: 1.12rem;
+  font-weight: 650;
+  padding: 8px 10px;
+  background: transparent;
+  border-color: transparent;
+}
+
+.atividade-titulo-campo:hover { border-color: var(--borda); }

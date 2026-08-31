@@ -163,8 +163,9 @@ function renderPainelAtividade() {
   $('#painel-atividade').innerHTML = `
     <article class="cartao cartao-atividade">
       <div class="atividade-titulo-grande">
-        <span class="atividade-icone">${escapar(a.icone)}</span>
-        <h2>${escapar(a.titulo)}</h2>
+        <span class="atividade-icone" id="icone-atual">${escapar(a.icone)}</span>
+        <input class="atividade-titulo-campo" type="text" maxlength="60"
+               value="${escapar(a.titulo)}" aria-label="Nome da atividade">
       </div>
       <p class="detalhe-parado">${a.concluida ? 'Objetivo concluído 🏁' : textoParado(a)}</p>
 
@@ -292,6 +293,17 @@ function ligarEventos() {
       persistir();
       const marca = evento.target.closest('.ponto').querySelector('.ponto-marca');
       if (marca) marca.disabled = evento.target.value.trim() === '';
+    } else if (evento.target.classList.contains('atividade-titulo-campo')) {
+      const nome = evento.target.value.trim();
+      if (nome) {
+        atividade.titulo = nome;
+        atividade.icone = iconeSugerido(nome);
+        persistir();
+        /* Atualiza aba, lista e ícone sem redesenhar o campo em que se digita. */
+        $('#icone-atual').textContent = atividade.icone;
+        renderAbas();
+        renderAtividades();
+      }
     } else if (evento.target.classList.contains('atividade-nota-campo')) {
       atividade.nota = evento.target.value;
       atividade.atualizadoEm = hoje;
