@@ -46,7 +46,21 @@ O arquivo `render.yaml` na raiz já traz essa configuração — se você criar 
 
 > Não use o plano de **Web Service**: além de exigir um comando de start que este projeto não tem, a versão gratuita hiberna após 15 minutos parada e demora para acordar. Static Site é gratuito e sempre no ar.
 
-**GitHub Pages** (alternativa ainda mais simples): no GitHub, *Settings → Pages → Source: Deploy from a branch*, escolha a branch e a pasta `/ (root)`.
+**GitHub Pages** (alternativa ainda mais simples, e o repositório já está pronto para ela):
+
+1. Abra o repositório no GitHub → aba **Settings** (no celular ou tablet ela pode estar atrás do ícone `⋯`).
+2. No menu da esquerda, clique em **Pages**.
+3. Em *Build and deployment* → **Source**: `Deploy from a branch`.
+4. **Branch**: selecione a branch do projeto e a pasta `/ (root)` → **Save**.
+5. Aguarde 1 a 2 minutos e recarregue a página: o link aparece no topo.
+
+O endereço final é:
+
+```
+https://gilsonbolivar-maker.github.io/TEO/
+```
+
+A partir daí, todo `git push` na branch publicada atualiza o site sozinho. O arquivo `.nojekyll` na raiz evita que o GitHub tente processar o projeto como um site Jekyll.
 
 ## Dados e privacidade
 
@@ -67,6 +81,7 @@ assets/js/estatisticas.js   pontos, sequências, níveis, desempenho
 assets/js/app.js            renderização e eventos
 PLANO.md                    o programa escrito: rituais, regras e protocolos
 render.yaml                 configuração de publicação no Render (site estático)
+.nojekyll                   desliga o processamento Jekyll no GitHub Pages
 ```
 
 ## Personalizar
