@@ -1,0 +1,12 @@
+{
+  "name": "programa-teo",
+  "version": "1.0.0",
+  "description": "Programa motivacional Teo Neto: habitos diarios, sequencias, pontos e conquistas",
+  "private": true,
+  "scripts": {
+    "start": "node servidor.js"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

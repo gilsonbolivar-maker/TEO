@@ -44,7 +44,15 @@ O app é estático — não precisa de build nem de servidor.
 
 O arquivo `render.yaml` na raiz já traz essa configuração — se você criar o serviço via **Blueprint**, o Render preenche tudo sozinho.
 
-> Não use o plano de **Web Service**: além de exigir um comando de start que este projeto não tem, a versão gratuita hiberna após 15 minutos parada e demora para acordar. Static Site é gratuito e sempre no ar.
+**Se mesmo assim for por Web Service** (o Render exige um Start Command nessa tela), o projeto traz um servidor estático mínimo, sem dependências:
+
+| Campo | Valor |
+|---|---|
+| Language | `Node` |
+| Build Command | *(vazio)* |
+| Start Command | `npm start` |
+
+> Prefira Static Site: o Web Service gratuito hiberna após 15 minutos parado e leva quase um minuto para acordar. Static Site é gratuito e fica sempre no ar.
 
 **GitHub Pages** (alternativa ainda mais simples, e o repositório já está pronto para ela):
 
@@ -74,6 +82,8 @@ Tudo é salvo no `localStorage` **do navegador que você usa** — nada sai do a
 
 ```
 index.html                  estrutura da página
+servidor.js                 servidor estático opcional (só para Render Web Service)
+package.json                define o comando `npm start`
 assets/css/estilo.css       estilos (tema escuro, com versão clara automática)
 assets/js/dados.js          frases, hábitos sugeridos, níveis e medalhas
 assets/js/armazenamento.js  leitura/escrita no localStorage, datas, backup
