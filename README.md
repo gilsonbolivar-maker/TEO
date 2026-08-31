@@ -18,7 +18,8 @@ No celular, adicione a página à tela inicial para abrir como um app.
 
 ## O que o app faz
 
-- **Hoje** — frase motivacional do dia (muda todo dia), lista de hábitos com marcação em um toque, anel de progresso, diário da "vitória do dia" e registro de energia (1 a 5).
+- **Hoje** — frase motivacional do dia (muda todo dia), lista de hábitos com marcação em um toque, anel de progresso, quadro **"Continuar de onde parei"**, diário da "vitória do dia" e registro de energia (1 a 5).
+- **Continuar de onde parei** — o que não acaba em um dia: livro, curso, treino, projeto. Cada item guarda a anotação de onde você parou ("capítulo 7, página 120"), progresso opcional (`120/160 páginas`) e há quantos dias está parado — os mais abandonados sobem para o topo e ganham etiqueta de alerta a partir de 3 dias. Dá para concluir, reabrir e remover; concluir rende as medalhas *Terminei* e *Maratonista*.
 - **Progresso** — sequência atual e melhor sequência, dias ativos e perfeitos, mapa de calor das últimas 12 semanas, desempenho de cada hábito nos últimos 30 dias e revisão dos últimos 7 dias com média e recado automático.
 - **Conquistas** — 12 medalhas, de "Primeiro Passo" a "Centurião" (100 dias seguidos).
 - **Ajustes** — nome, objetivo do programa, criar/desativar/remover hábitos (com sugestões prontas), exportar e importar backup, reiniciar tudo.

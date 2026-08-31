@@ -81,6 +81,42 @@
       </article>
 
       <article class="cartao">
+        <div class="cartao-cabecalho">
+          <div>
+            <h2>Continuar de onde parei</h2>
+            <p class="legenda">Livro, curso, treino, projeto — o que não acaba em um dia.</p>
+          </div>
+          <button class="botao secundario compacto" id="botao-nova-atividade">+ Nova</button>
+        </div>
+
+        <form class="form-atividade" id="form-atividade" hidden>
+          <div class="linha-campos">
+            <input id="atv-icone" type="text" maxlength="2" value="📌" aria-label="Ícone" class="campo-icone">
+            <input id="atv-titulo" type="text" maxlength="60" placeholder="O que você está fazendo?" required>
+          </div>
+          <input id="atv-nota" type="text" maxlength="80" placeholder="Onde parou? Ex.: capítulo 4, página 87">
+          <div class="linha-campos">
+            <input id="atv-atual" type="number" min="0" placeholder="atual" class="campo-num" aria-label="Progresso atual">
+            <span class="separador">de</span>
+            <input id="atv-meta" type="number" min="0" placeholder="total" class="campo-num" aria-label="Total">
+            <input id="atv-unidade" type="text" maxlength="14" placeholder="páginas" class="campo-unidade" aria-label="Unidade">
+          </div>
+          <div class="linha-botoes">
+            <button type="submit" class="botao">Salvar</button>
+            <button type="button" class="botao secundario" id="botao-cancelar-atividade">Cancelar</button>
+          </div>
+        </form>
+
+        <ul class="lista-atividades" id="lista-atividades"></ul>
+        <p class="vazio" id="atividades-vazio">Nada em andamento. Toque em <strong>+ Nova</strong> para registrar algo que você quer continuar.</p>
+
+        <details class="concluidas" id="bloco-concluidas" hidden>
+          <summary id="resumo-concluidas"></summary>
+          <ul class="lista-atividades concluidas-lista" id="lista-concluidas"></ul>
+        </details>
+      </article>
+
+      <article class="cartao">
         <h2>Diário rápido</h2>
         <label class="rotulo" for="campo-vitoria">Qual foi a vitória de hoje?</label>
         <textarea id="campo-vitoria" rows="3" placeholder="Mesmo pequena. Escreva a vitória do dia."></textarea>

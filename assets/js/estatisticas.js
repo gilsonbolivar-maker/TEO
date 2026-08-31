@@ -141,6 +141,7 @@ function estatisticas(estado) {
     sequenciaAtual: sequenciaAtual(estado),
     melhorSequencia: melhorSequencia(estado),
     retomadas: retomadas(estado),
+    atividadesConcluidas: (estado.atividades || []).filter(a => a.concluida).length,
     nivel: nivelDe(pontuacao)
   };
 }

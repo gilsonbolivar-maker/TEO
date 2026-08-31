@@ -92,5 +92,7 @@ const CONQUISTAS = [
   { id: 'pontos-500',     icone: '⭐', nome: '500 Pontos',       desc: 'Acumular 500 pontos no programa.', teste: e => e.pontos >= 500 },
   { id: 'pontos-2000',    icone: '🌟', nome: '2000 Pontos',      desc: 'Acumular 2000 pontos no programa.', teste: e => e.pontos >= 2000 },
   { id: 'diario',         icone: '✍️', nome: 'Memória Viva',     desc: 'Registrar 10 vitórias no diário.', teste: e => e.vitoriasRegistradas >= 10 },
-  { id: 'retorno',        icone: '🔄', nome: 'Voltei Mais Forte', desc: 'Voltar a marcar hábitos depois de falhar um dia.', teste: e => e.retomadas >= 1 }
+  { id: 'retorno',        icone: '🔄', nome: 'Voltei Mais Forte', desc: 'Voltar a marcar hábitos depois de falhar um dia.', teste: e => e.retomadas >= 1 },
+  { id: 'terminei',       icone: '🏁', nome: 'Terminei',          desc: 'Concluir uma atividade do quadro "continuar".', teste: e => e.atividadesConcluidas >= 1 },
+  { id: 'maratonista',    icone: '📕', nome: 'Maratonista',       desc: 'Concluir 5 atividades do quadro "continuar".', teste: e => e.atividadesConcluidas >= 5 }
 ];

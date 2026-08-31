@@ -39,6 +39,7 @@ function estadoInicial() {
       inicio: hojeISO()
     },
     habitos: HABITOS_PADRAO.map(h => ({ id: idNovo(), ativo: true, ...h })),
+    atividades: [],
     registros: {},
     config: { tema: 'escuro' }
   };
@@ -68,6 +69,7 @@ function normalizar(estado) {
     versao: 1,
     perfil: Object.assign({}, base.perfil, estado.perfil || {}),
     habitos: Array.isArray(estado.habitos) ? estado.habitos : base.habitos,
+    atividades: Array.isArray(estado.atividades) ? estado.atividades : [],
     registros: (estado.registros && typeof estado.registros === 'object') ? estado.registros : {},
     config: Object.assign({}, base.config, estado.config || {})
   };
@@ -80,6 +82,20 @@ function normalizar(estado) {
       pontos: Number(h.pontos) > 0 ? Number(h.pontos) : 10,
       ativo: h.ativo !== false
     }));
+  limpo.atividades = limpo.atividades
+    .filter(a => a && typeof a.titulo === 'string')
+    .map(a => ({
+      id: a.id || idNovo(),
+      titulo: a.titulo,
+      icone: a.icone || '📌',
+      nota: typeof a.nota === 'string' ? a.nota : '',
+      atual: Number(a.atual) || 0,
+      meta: Number(a.meta) || 0,
+      unidade: typeof a.unidade === 'string' ? a.unidade : '',
+      concluida: a.concluida === true,
+      atualizadoEm: a.atualizadoEm || hojeISO()
+    }));
+
   Object.keys(limpo.registros).forEach(dia => {
     const r = limpo.registros[dia] || {};
     limpo.registros[dia] = {

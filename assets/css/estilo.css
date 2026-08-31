@@ -29,6 +29,9 @@
 
 * { box-sizing: border-box; }
 
+/* O atributo hidden precisa vencer as regras de display das classes. */
+[hidden] { display: none !important; }
+
 body {
   margin: 0;
   padding: 0 16px 48px;
@@ -458,3 +461,78 @@ input:focus, textarea:focus { outline: 2px solid var(--acento); outline-offset: 
 
 .passos { margin: 12px 0 10px; padding-left: 20px; font-size: .88rem; display: grid; gap: 6px; }
 .passos li { padding-left: 2px; }
+
+/* ---------- Quadro "continuar de onde parei" ---------- */
+
+.botao.compacto { padding: 7px 12px; font-size: .82rem; white-space: nowrap; }
+
+.form-atividade {
+  display: grid;
+  gap: 8px;
+  padding: 14px;
+  margin-bottom: 14px;
+  border: 1px dashed var(--borda);
+  border-radius: 12px;
+  background: var(--fundo-alt);
+}
+
+.linha-campos { display: flex; gap: 8px; align-items: center; }
+.linha-campos input[type="text"]:not(.campo-icone):not(.campo-unidade) { flex: 1; min-width: 0; }
+.campo-num { width: 84px; flex-shrink: 0; }
+.campo-unidade { width: 110px; flex-shrink: 0; }
+.separador { color: var(--texto-suave); font-size: .85rem; }
+
+.lista-atividades { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+
+.atividade {
+  border: 1px solid var(--borda);
+  border-left: 3px solid var(--acento);
+  border-radius: 12px;
+  padding: 12px 14px;
+  background: var(--fundo-alt);
+}
+
+.atividade-topo { display: flex; align-items: center; gap: 10px; }
+.atividade-icone { font-size: 1.2rem; }
+.atividade-titulo { flex: 1; font-weight: 600; }
+
+.atividade-parado {
+  font-size: .7rem;
+  color: var(--texto-suave);
+  white-space: nowrap;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: var(--borda);
+}
+
+.atividade-parado.alerta { color: #17110b; background: var(--acento-2); font-weight: 600; }
+
+.atividade-nota { margin: 8px 0 0; font-size: .88rem; color: var(--texto-suave); }
+.atividade-nota.vazia { font-style: italic; opacity: .7; }
+
+.atividade-progresso { display: flex; align-items: center; gap: 10px; margin-top: 10px; }
+.atividade-progresso .trilha { flex: 1; }
+.atividade-progresso .numeros { font-size: .78rem; color: var(--texto-suave); white-space: nowrap; }
+
+.atividade-acoes { display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
+
+.atividade-acoes button {
+  border: 1px solid var(--borda);
+  background: transparent;
+  color: var(--texto);
+  border-radius: 8px;
+  padding: 6px 12px;
+  font: inherit;
+  font-size: .8rem;
+  cursor: pointer;
+}
+
+.atividade-acoes button:hover { border-color: var(--acento); }
+.atividade-acoes button[data-acao="continuar"] { background: var(--acento); border-color: var(--acento); color: #17110b; font-weight: 600; }
+.atividade-acoes button[data-acao="remover"] { color: var(--perigo); border-color: transparent; }
+
+.concluidas { margin-top: 14px; }
+.concluidas summary { cursor: pointer; font-size: .82rem; color: var(--texto-suave); }
+.concluidas-lista { margin-top: 10px; }
+.concluidas-lista .atividade { border-left-color: var(--sucesso); opacity: .65; }
+.concluidas-lista .atividade-titulo { text-decoration: line-through; }

@@ -225,10 +225,150 @@ function renderAjustes() {
     .join('') || '<p class="legenda">Todas as sugestões já estão na sua lista.</p>';
 }
 
+/* ---------- Quadro "continuar de onde parei" ---------- */
+
+let atividadeEditando = null;
+
+function diasParado(atividade) {
+  const d = Math.round((isoParaData(hoje) - isoParaData(atividade.atualizadoEm)) / 86400000);
+  return d > 0 ? d : 0;
+}
+
+function textoParado(dias) {
+  if (dias === 0) return 'hoje';
+  if (dias === 1) return 'ontem';
+  return `parado há ${dias} dias`;
+}
+
+function cartaoAtividade(a, concluida) {
+  const dias = diasParado(a);
+  const pct = a.meta > 0 ? Math.min(100, Math.round((a.atual / a.meta) * 100)) : 0;
+  const unidade = a.unidade ? ' ' + escapar(a.unidade) : '';
+  return `
+    <li class="atividade" data-atividade="${a.id}">
+      <div class="atividade-topo">
+        <span class="atividade-icone">${escapar(a.icone)}</span>
+        <span class="atividade-titulo">${escapar(a.titulo)}</span>
+        ${concluida ? '' : `<span class="atividade-parado ${dias >= 3 ? 'alerta' : ''}">${textoParado(dias)}</span>`}
+      </div>
+      <p class="atividade-nota ${a.nota ? '' : 'vazia'}">${a.nota ? escapar(a.nota) : 'Sem anotação de onde parou.'}</p>
+      ${a.meta > 0 ? `
+        <div class="atividade-progresso">
+          <div class="trilha"><div style="width:${pct}%"></div></div>
+          <span class="numeros">${a.atual}/${a.meta}${unidade} · ${pct}%</span>
+        </div>` : ''}
+      <div class="atividade-acoes">
+        ${concluida
+          ? '<button data-acao="reabrir">Reabrir</button>'
+          : '<button data-acao="continuar">Continuar</button><button data-acao="concluir">Concluir</button>'}
+        <button data-acao="remover">Remover</button>
+      </div>
+    </li>
+  `;
+}
+
+function renderAtividades() {
+  const todas = estado.atividades || [];
+  const abertas = todas.filter(a => !a.concluida);
+  const feitas = todas.filter(a => a.concluida);
+
+  /* As paradas há mais tempo aparecem primeiro: são as que precisam de atenção. */
+  abertas.sort((a, b) => diasParado(b) - diasParado(a));
+
+  $('#lista-atividades').innerHTML = abertas.map(a => cartaoAtividade(a, false)).join('');
+  $('#atividades-vazio').hidden = abertas.length > 0;
+
+  $('#bloco-concluidas').hidden = feitas.length === 0;
+  $('#resumo-concluidas').textContent = `Concluídas (${feitas.length})`;
+  $('#lista-concluidas').innerHTML = feitas.map(a => cartaoAtividade(a, true)).join('');
+}
+
+function abrirFormAtividade(atividade) {
+  atividadeEditando = atividade ? atividade.id : null;
+  $('#atv-icone').value = atividade ? atividade.icone : '📌';
+  $('#atv-titulo').value = atividade ? atividade.titulo : '';
+  $('#atv-nota').value = atividade ? atividade.nota : '';
+  $('#atv-atual').value = atividade && atividade.atual ? atividade.atual : '';
+  $('#atv-meta').value = atividade && atividade.meta ? atividade.meta : '';
+  $('#atv-unidade').value = atividade ? atividade.unidade : '';
+  $('#form-atividade').hidden = false;
+  $('#atv-titulo').focus();
+}
+
+function fecharFormAtividade() {
+  atividadeEditando = null;
+  $('#form-atividade').hidden = true;
+  $('#form-atividade').reset();
+}
+
+function ligarEventosAtividades() {
+  $('#botao-nova-atividade').addEventListener('click', () => {
+    if (!$('#form-atividade').hidden && atividadeEditando === null) fecharFormAtividade();
+    else abrirFormAtividade(null);
+  });
+
+  $('#botao-cancelar-atividade').addEventListener('click', fecharFormAtividade);
+
+  $('#form-atividade').addEventListener('submit', evento => {
+    evento.preventDefault();
+    const titulo = $('#atv-titulo').value.trim();
+    if (!titulo) return;
+    const dados = {
+      titulo,
+      icone: $('#atv-icone').value.trim() || '📌',
+      nota: $('#atv-nota').value.trim(),
+      atual: Math.max(0, Number($('#atv-atual').value) || 0),
+      meta: Math.max(0, Number($('#atv-meta').value) || 0),
+      unidade: $('#atv-unidade').value.trim(),
+      atualizadoEm: hoje
+    };
+    const emEdicao = atividadeEditando;
+    atualizar(() => {
+      const existente = (estado.atividades || []).find(a => a.id === emEdicao);
+      if (existente) Object.assign(existente, dados);
+      else estado.atividades.push({ id: idNovo(), concluida: false, ...dados });
+    });
+    avisar(emEdicao ? 'Atividade atualizada.' : 'Atividade adicionada.');
+    fecharFormAtividade();
+  });
+
+  document.addEventListener('click', evento => {
+    const botao = evento.target.closest('.atividade-acoes [data-acao]');
+    if (!botao) return;
+    const id = botao.closest('[data-atividade]').dataset.atividade;
+    const atividade = (estado.atividades || []).find(a => a.id === id);
+    if (!atividade) return;
+    const acao = botao.dataset.acao;
+
+    if (acao === 'continuar') {
+      abrirFormAtividade(atividade);
+      $('#form-atividade').scrollIntoView({ behavior: 'smooth', block: 'center' });
+    } else if (acao === 'concluir') {
+      atualizar(() => {
+        atividade.concluida = true;
+        atividade.atualizadoEm = hoje;
+        if (atividade.meta > 0) atividade.atual = atividade.meta;
+      });
+      avisar('🏁 Atividade concluída!');
+    } else if (acao === 'reabrir') {
+      atualizar(() => {
+        atividade.concluida = false;
+        atividade.atualizadoEm = hoje;
+      });
+    } else if (acao === 'remover' && confirm(`Remover "${atividade.titulo}" do quadro?`)) {
+      atualizar(() => {
+        estado.atividades = estado.atividades.filter(a => a.id !== id);
+      });
+      avisar('Atividade removida.');
+    }
+  });
+}
+
 function render() {
   const stats = estatisticas(estado);
   renderTopo(stats);
   renderHoje();
+  renderAtividades();
   renderProgresso(stats);
   renderConquistas(stats);
   renderAjustes();
@@ -390,6 +530,8 @@ function ligarEventos() {
     atualizar(() => { estado = estadoInicial(); });
     avisar('Programa reiniciado.');
   });
+
+  ligarEventosAtividades();
 
   /* Se a aba ficar aberta durante a virada do dia, recarrega o dia atual. */
   setInterval(() => {
