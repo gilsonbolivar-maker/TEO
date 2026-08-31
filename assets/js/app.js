@@ -287,9 +287,68 @@ function fecharEscolhaRecompensa() {
 
 /* ---------- Aulas ---------- */
 
+const HORAS_NO_MOSTRADOR = 12;
+const CORES_SETOR = ['#ff7a2f', '#3ecf8e', '#5b9cff', '#c77dff', '#ffb347', '#ff6b8a'];
+
+/* Ponto na circunferência para um horário: 12h no topo, sentido horário. */
+function pontoDoRelogio(cx, cy, raio, minutos) {
+  const angulo = ((minutos % 720) / 720) * 2 * Math.PI - Math.PI / 2;
+  return [cx + raio * Math.cos(angulo), cy + raio * Math.sin(angulo)];
+}
+
+function setorSVG(inicio, fim, raioInterno, raioExterno) {
+  const [x1e, y1e] = pontoDoRelogio(100, 100, raioExterno, inicio);
+  const [x2e, y2e] = pontoDoRelogio(100, 100, raioExterno, fim);
+  const [x1i, y1i] = pontoDoRelogio(100, 100, raioInterno, inicio);
+  const [x2i, y2i] = pontoDoRelogio(100, 100, raioInterno, fim);
+  const grande = (fim - inicio) > 360 ? 1 : 0;
+  return `M ${x1e} ${y1e} A ${raioExterno} ${raioExterno} 0 ${grande} 1 ${x2e} ${y2e}
+          L ${x2i} ${y2i} A ${raioInterno} ${raioInterno} 0 ${grande} 0 ${x1i} ${y1i} Z`;
+}
+
+function renderMostrador(agora) {
+  const minutos = agora.getHours() * 60 + agora.getMinutes() + agora.getSeconds() / 60;
+  const janela = aulasNaJanela(estado.aulas || [], agora, HORAS_NO_MOSTRADOR);
+
+  const marcas = Array.from({ length: 12 }, (_, i) => {
+    const [x1, y1] = pontoDoRelogio(100, 100, 76, i * 60);
+    const [x2, y2] = pontoDoRelogio(100, 100, 81, i * 60);
+    const [xt, yt] = pontoDoRelogio(100, 100, 91, i * 60);
+    return `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" class="marca"></line>
+            <text x="${xt}" y="${yt}" class="marca-hora">${i === 0 ? 12 : i}</text>`;
+  }).join('');
+
+  const setores = janela.map((item, i) => `
+    <path d="${setorSVG(item.inicio, item.fim, 56, 84)}"
+          fill="${CORES_SETOR[i % CORES_SETOR.length]}"
+          opacity="${item.comecou ? 1 : .82}"></path>`).join('');
+
+  const [px, py] = pontoDoRelogio(100, 100, 74, minutos);
+  const [pxi, pyi] = pontoDoRelogio(100, 100, 14, minutos + 360);
+
+  $('#mostrador').innerHTML = `
+    <svg viewBox="0 0 200 200" class="setograma" role="img" aria-label="Aulas das próximas 12 horas">
+      <circle cx="100" cy="100" r="72" class="aro"></circle>
+      <circle cx="100" cy="100" r="48" class="aro-interno"></circle>
+      ${setores}
+      ${marcas}
+      <line x1="${pxi}" y1="${pyi}" x2="${px}" y2="${py}" class="ponteiro"></line>
+      <circle cx="100" cy="100" r="5" class="centro"></circle>
+      <text x="100" y="95" class="hora-central">${agora.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}</text>
+      <text x="100" y="110" class="hora-legenda">próximas ${HORAS_NO_MOSTRADOR}h</text>
+    </svg>`;
+
+  $('#legenda-setores').innerHTML = janela.map((item, i) => `
+    <li>
+      <span class="ponto-cor" style="background:${CORES_SETOR[i % CORES_SETOR.length]}"></span>
+      <strong>${escapar(item.aula.turma)}</strong>
+      <small>${escapar(item.aula.inicio)}–${escapar(item.aula.fim)}${item.aula.local ? ' · ' + escapar(item.aula.local) : ''}</small>
+    </li>`).join('');
+}
+
 function renderRelogio() {
   const agora = new Date();
-  $('#relogio').textContent = agora.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+  renderMostrador(agora);
   $('#relogio-data').textContent = agora.toLocaleDateString('pt-BR', {
     weekday: 'long', day: '2-digit', month: 'long'
   });

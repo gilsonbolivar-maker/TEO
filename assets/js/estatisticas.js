@@ -158,3 +158,28 @@ function situacaoAulas(aulas, agora) {
     faltam
   };
 }
+
+/* Aulas que aparecem nas próximas 12 horas, com início e fim recortados nessa janela.
+   É o que o mostrador circular precisa desenhar. */
+function aulasNaJanela(aulas, agora, horas) {
+  const minutosAgora = agora.getHours() * 60 + agora.getMinutes();
+  const limite = minutosAgora + horas * 60;
+  const janela = [];
+
+  aulas.forEach(aula => {
+    [0, 1].forEach(offset => {
+      if (aula.dia !== (agora.getDay() + offset) % 7) return;
+      const inicio = minutosDe(aula.inicio) + offset * 1440;
+      const fim = minutosDe(aula.fim) + offset * 1440;
+      if (fim <= minutosAgora || inicio >= limite) return;
+      janela.push({
+        aula,
+        inicio: Math.max(inicio, minutosAgora),
+        fim: Math.min(fim, limite),
+        comecou: inicio <= minutosAgora
+      });
+    });
+  });
+
+  return janela.sort((a, b) => a.inicio - b.inicio);
+}
