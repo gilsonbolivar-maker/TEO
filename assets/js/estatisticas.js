@@ -137,13 +137,21 @@ function segundaDaSemana(iso) {
   return somarDias(iso, -passo);
 }
 
+function diasDaAula(aula) {
+  return Object.keys(aula.horarios).map(Number).sort();
+}
+
 function aulaValeNaData(aula, iso) {
-  if (!aula.dias.includes(isoParaData(iso).getDay())) return false;
+  if (!aula.horarios[isoParaData(iso).getDay()]) return false;
   return !aula.semana || aula.semana === segundaDaSemana(iso);
 }
 
-function aulasDoDia(aulas, iso) {
-  return aulas.filter(a => aulaValeNaData(a, iso))
+/* Cada ocorrência é a aula num dia concreto, já com o horário daquele dia. */
+function ocorrenciasDoDia(aulas, iso) {
+  const dia = isoParaData(iso).getDay();
+  return aulas
+    .filter(a => aulaValeNaData(a, iso))
+    .map(a => ({ aula: a, inicio: a.horarios[dia].inicio, fim: a.horarios[dia].fim }))
     .sort((x, y) => minutosDe(x.inicio) - minutosDe(y.inicio));
 }
 
@@ -151,17 +159,17 @@ function aulasDoDia(aulas, iso) {
 function situacaoAulas(aulas, agora, hojeIso) {
   const minutos = agora.getHours() * 60 + agora.getMinutes();
 
-  const emAndamento = aulasDoDia(aulas, hojeIso).find(a =>
-    minutosDe(a.inicio) <= minutos && minutos < minutosDe(a.fim)) || null;
+  const emAndamento = ocorrenciasDoDia(aulas, hojeIso).find(o =>
+    minutosDe(o.inicio) <= minutos && minutos < minutosDe(o.fim)) || null;
 
   let proxima = null;
   let faltam = 0;
   for (let adiante = 0; adiante < 7 && !proxima; adiante++) {
     const dia = somarDias(hojeIso, adiante);
-    const candidatas = aulasDoDia(aulas, dia)
-      .filter(a => adiante > 0 || minutosDe(a.inicio) > minutos);
+    const candidatas = ocorrenciasDoDia(aulas, dia)
+      .filter(o => adiante > 0 || minutosDe(o.inicio) > minutos);
     if (candidatas.length) {
-      proxima = { aula: candidatas[0], dia };
+      proxima = { ...candidatas[0], dia };
       faltam = adiante * 1440 + minutosDe(candidatas[0].inicio) - minutos;
     }
   }
@@ -182,12 +190,13 @@ function aulasNaJanela(aulas, agora, horas, hojeIso) {
 
   [0, 1].forEach(offset => {
     const dia = somarDias(hojeIso, offset);
-    aulasDoDia(aulas, dia).forEach(aula => {
-      const inicio = minutosDe(aula.inicio) + offset * 1440;
-      const fim = minutosDe(aula.fim) + offset * 1440;
+    ocorrenciasDoDia(aulas, dia).forEach(ocorrencia => {
+      const inicio = minutosDe(ocorrencia.inicio) + offset * 1440;
+      const fim = minutosDe(ocorrencia.fim) + offset * 1440;
       if (fim <= minutosAgora || inicio >= limite) return;
       janela.push({
-        aula,
+        aula: ocorrencia.aula,
+        hora: ocorrencia,
         inicio: Math.max(inicio, minutosAgora),
         fim: Math.min(fim, limite),
         comecou: inicio <= minutosAgora

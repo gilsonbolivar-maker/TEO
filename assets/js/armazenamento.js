@@ -123,22 +123,36 @@ function normalizar(estado) {
       .map(r => r.trim()),
     moto: normalizarMoto(estado.moto),
     aulas: (Array.isArray(estado.aulas) ? estado.aulas : [])
-      .filter(a => a && typeof a.turma === 'string' && a.turma.trim() && /^\d{2}:\d{2}$/.test(a.inicio || ''))
+      .filter(a => a && typeof a.turma === 'string' && a.turma.trim())
       .map(a => {
-        /* Versões antigas guardavam um único dia; agora a aula pode ter vários. */
-        const dias = Array.isArray(a.dias) ? a.dias : [a.dia];
+        /* Cada dia da semana guarda o seu próprio horário. Versões antigas tinham
+           um horário único para todos os dias — são convertidas aqui. */
+        const horarios = {};
+        if (a.horarios && typeof a.horarios === 'object') {
+          Object.keys(a.horarios).forEach(dia => {
+            const h = a.horarios[dia] || {};
+            if (/^\d{2}:\d{2}$/.test(h.inicio || '') && /^\d{2}:\d{2}$/.test(h.fim || '')) {
+              horarios[Number(dia)] = { inicio: h.inicio, fim: h.fim };
+            }
+          });
+        } else if (/^\d{2}:\d{2}$/.test(a.inicio || '')) {
+          const antigos = Array.isArray(a.dias) ? a.dias : [a.dia];
+          antigos.forEach(d => {
+            horarios[Math.min(6, Math.max(0, Number(d) || 0))] = {
+              inicio: a.inicio,
+              fim: /^\d{2}:\d{2}$/.test(a.fim || '') ? a.fim : a.inicio
+            };
+          });
+        }
         return {
           id: a.id || idNovo(),
-          dias: [...new Set(dias.map(d => Math.min(6, Math.max(0, Number(d) || 0))))].sort(),
-          inicio: a.inicio,
-          fim: /^\d{2}:\d{2}$/.test(a.fim || '') ? a.fim : a.inicio,
           turma: a.turma.trim(),
           local: typeof a.local === 'string' ? a.local.trim() : '',
-          /* Vazio = toda semana. Preenchido = só na semana que começa nessa segunda. */
-          semana: /^\d{4}-\d{2}-\d{2}$/.test(a.semana || '') ? a.semana : ''
+          semana: /^\d{4}-\d{2}-\d{2}$/.test(a.semana || '') ? a.semana : '',
+          horarios
         };
       })
-      .sort((x, y) => x.dias[0] - y.dias[0] || (x.inicio < y.inicio ? -1 : 1)),
+      .filter(a => Object.keys(a.horarios).length),
     atividades: (Array.isArray(estado.atividades) ? estado.atividades : [])
       .filter(a => a && typeof a.titulo === 'string')
       .map(a => ({

@@ -645,3 +645,18 @@ select {
 }
 
 .aula-toque:hover .aula-info strong { color: var(--acento); }
+
+.horarios-por-dia { display: grid; gap: 8px; margin: 4px 0 2px; }
+
+.linha-horario {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  border: 1px solid var(--borda);
+  border-radius: 10px;
+  background: var(--cartao);
+}
+
+.linha-horario-dia { font-size: .82rem; font-weight: 600; width: 74px; flex-shrink: 0; }
+.linha-horario input[type="time"] { flex: 1; min-width: 0; padding: 8px 10px; font-size: .88rem; }

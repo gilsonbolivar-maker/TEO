@@ -290,6 +290,7 @@ function fecharEscolhaRecompensa() {
 const HORAS_NO_MOSTRADOR = 12;
 let semanaVista = segundaDaSemana(hojeISO());
 let aulaEditando = null;
+let horariosDoForm = {};
 const CORES_SETOR = ['#ff7a2f', '#3ecf8e', '#5b9cff', '#c77dff', '#ffb347', '#ff6b8a'];
 
 /* Ponto na circunferência para um horário: 12h no topo, sentido horário. */
@@ -344,7 +345,7 @@ function renderMostrador(agora) {
     <li>
       <span class="ponto-cor" style="background:${CORES_SETOR[i % CORES_SETOR.length]}"></span>
       <strong>${escapar(item.aula.turma)}</strong>
-      <small>${escapar(item.aula.inicio)}–${escapar(item.aula.fim)}${item.aula.local ? ' · ' + escapar(item.aula.local) : ''}</small>
+      <small>${escapar(item.hora.inicio)}–${escapar(item.hora.fim)}${item.aula.local ? ' · ' + escapar(item.aula.local) : ''}</small>
     </li>`).join('');
 }
 
@@ -362,14 +363,14 @@ function renderRelogio() {
     caixa.className = 'aula-agora em-aula';
     caixa.innerHTML = `
       <p class="aula-rotulo">Aula agora</p>
-      <p class="aula-turma">${escapar(s.emAndamento.turma)}</p>
-      <p class="aula-detalhe">${escapar(s.emAndamento.inicio)} às ${escapar(s.emAndamento.fim)}${s.emAndamento.local ? ' · ' + escapar(s.emAndamento.local) : ''} · termina em ${duracaoEmTexto(s.restante)}</p>`;
+      <p class="aula-turma">${escapar(s.emAndamento.aula.turma)}</p>
+      <p class="aula-detalhe">${escapar(s.emAndamento.inicio)} às ${escapar(s.emAndamento.fim)}${s.emAndamento.aula.local ? ' · ' + escapar(s.emAndamento.aula.local) : ''} · termina em ${duracaoEmTexto(s.restante)}</p>`;
   } else if (s.proxima) {
     caixa.className = 'aula-agora';
     caixa.innerHTML = `
       <p class="aula-rotulo">Sem aula agora · próxima</p>
       <p class="aula-turma">${escapar(s.proxima.aula.turma)}</p>
-      <p class="aula-detalhe">${escapar(DIAS_SEMANA[isoParaData(s.proxima.dia).getDay()])}, ${escapar(s.proxima.aula.inicio)}${s.proxima.aula.local ? ' · ' + escapar(s.proxima.aula.local) : ''} · em ${duracaoEmTexto(s.faltam)}</p>`;
+      <p class="aula-detalhe">${escapar(DIAS_SEMANA[isoParaData(s.proxima.dia).getDay()])}, ${escapar(s.proxima.inicio)}${s.proxima.aula.local ? ' · ' + escapar(s.proxima.aula.local) : ''} · em ${duracaoEmTexto(s.faltam)}</p>`;
   } else {
     caixa.className = 'aula-agora';
     caixa.innerHTML = '<p class="aula-detalhe">Nenhuma aula cadastrada na grade.</p>';
@@ -387,22 +388,22 @@ function renderGrade() {
   $('#semana-hoje').hidden = semanaVista === semanaAtual;
 
   const dias = Array.from({ length: 7 }, (_, i) => somarDias(semanaVista, i))
-    .filter(dia => aulasDoDia(aulas, dia).length);
+    .filter(dia => ocorrenciasDoDia(aulas, dia).length);
 
   $('#grade-aulas').innerHTML = dias.map(dia => `
     <div class="dia-grade ${dia === hoje ? 'hoje' : ''}">
       <p class="dia-nome">${DIAS_SEMANA[isoParaData(dia).getDay()]} ${formatarDataCurta(dia)}${dia === hoje ? ' · hoje' : ''}</p>
       <ul class="lista-aulas">
-        ${aulasDoDia(aulas, dia).map(a => `
+        ${ocorrenciasDoDia(aulas, dia).map(o => `
           <li class="aula">
-            <button class="aula-toque" data-editar-aula="${a.id}" title="Editar aula">
-              <span class="aula-hora">${escapar(a.inicio)}<small>${escapar(a.fim)}</small></span>
+            <button class="aula-toque" data-editar-aula="${o.aula.id}" title="Editar aula">
+              <span class="aula-hora">${escapar(o.inicio)}<small>${escapar(o.fim)}</small></span>
               <span class="aula-info">
-                <strong>${escapar(a.turma)}</strong>
-                <small>${a.local ? escapar(a.local) + ' · ' : ''}${a.semana ? 'só nesta semana' : 'toda semana'}${a.dias.length > 1 ? ' · ' + a.dias.map(d => DIAS_SEMANA[d].slice(0, 3)).join(', ') : ''}</small>
+                <strong>${escapar(o.aula.turma)}</strong>
+                <small>${o.aula.local ? escapar(o.aula.local) + ' · ' : ''}${o.aula.semana ? 'só nesta semana' : 'toda semana'}${diasDaAula(o.aula).length > 1 ? ' · ' + diasDaAula(o.aula).map(d => DIAS_SEMANA[d].slice(0, 3)).join(', ') : ''}</small>
               </span>
             </button>
-            <button class="icone-botao" data-remover-aula="${a.id}" title="Remover">✕</button>
+            <button class="icone-botao" data-remover-aula="${o.aula.id}" title="Remover">✕</button>
           </li>`).join('')}
       </ul>
     </div>`).join('');
@@ -664,12 +665,46 @@ function ligarEventos() {
       <span>${DIAS_SEMANA[d].slice(0, 3)}</span>
     </label>`).join('');
 
+  /* Ao marcar um dia, o horário já preenchido serve de sugestão para o novo. */
+  $('#aula-dias').addEventListener('change', evento => {
+    const dia = Number(evento.target.value);
+    if (evento.target.checked) {
+      const referencia = Object.values(horariosDoForm)[0];
+      horariosDoForm[dia] = horariosDoForm[dia] || (referencia ? { ...referencia } : { inicio: '', fim: '' });
+    } else {
+      delete horariosDoForm[dia];
+    }
+    renderHorariosDoForm();
+  });
+
+  $('#aula-horarios').addEventListener('input', evento => {
+    const campo = evento.target.closest('.hora-dia');
+    if (!campo) return;
+    const dia = Number(campo.dataset.dia);
+    horariosDoForm[dia] = horariosDoForm[dia] || { inicio: '', fim: '' };
+    horariosDoForm[dia][campo.dataset.campo] = campo.value;
+  });
+
+  function renderHorariosDoForm() {
+    const marcados = $$('#aula-dias input:checked').map(c => Number(c.value));
+    $('#aula-horarios').innerHTML = marcados.map(dia => {
+      const h = horariosDoForm[dia] || {};
+      return `
+        <div class="linha-horario">
+          <span class="linha-horario-dia">${DIAS_SEMANA[dia]}</span>
+          <input type="time" class="hora-dia" data-dia="${dia}" data-campo="inicio" value="${h.inicio || ''}" aria-label="Início de ${DIAS_SEMANA[dia]}">
+          <span class="separador">às</span>
+          <input type="time" class="hora-dia" data-dia="${dia}" data-campo="fim" value="${h.fim || ''}" aria-label="Fim de ${DIAS_SEMANA[dia]}">
+        </div>`;
+    }).join('') || '<p class="legenda">Marque um dia para definir o horário dele.</p>';
+  }
+
   function abrirFormAula(aula) {
     aulaEditando = aula ? aula.id : null;
     $('#form-aula').reset();
-    $$('#aula-dias input').forEach(c => { c.checked = aula ? aula.dias.includes(Number(c.value)) : false; });
-    $('#aula-inicio').value = aula ? aula.inicio : '';
-    $('#aula-fim').value = aula ? aula.fim : '';
+    horariosDoForm = aula ? JSON.parse(JSON.stringify(aula.horarios)) : {};
+    $$('#aula-dias input').forEach(c => { c.checked = !!horariosDoForm[Number(c.value)]; });
+    renderHorariosDoForm();
     $('#aula-turma').value = aula ? aula.turma : '';
     $('#aula-local').value = aula ? aula.local : '';
     $('#aula-repeticao').value = aula && aula.semana ? 'unica' : 'sempre';
@@ -680,6 +715,8 @@ function ligarEventos() {
 
   function fecharFormAula() {
     aulaEditando = null;
+    horariosDoForm = {};
+    renderHorariosDoForm();
     $('#form-aula').hidden = true;
     $('#form-aula').reset();
   }
@@ -694,24 +731,29 @@ function ligarEventos() {
   $('#form-aula').addEventListener('submit', evento => {
     evento.preventDefault();
     const turma = $('#aula-turma').value.trim();
-    const inicio = $('#aula-inicio').value;
-    const fim = $('#aula-fim').value;
     const dias = $$('#aula-dias input:checked').map(c => Number(c.value));
-    if (!turma || !inicio || !fim) return;
+    if (!turma) return;
     if (!dias.length) { avisar('Marque pelo menos um dia da semana.'); return; }
-    if (minutosDe(fim) <= minutosDe(inicio)) { avisar('O fim precisa ser depois do início.'); return; }
+
+    const horarios = {};
+    for (const dia of dias) {
+      const h = horariosDoForm[dia] || {};
+      if (!h.inicio || !h.fim) { avisar(`Falta o horário de ${DIAS_SEMANA[dia].toLowerCase()}.`); return; }
+      if (minutosDe(h.fim) <= minutosDe(h.inicio)) { avisar(`Em ${DIAS_SEMANA[dia].toLowerCase()}, o fim precisa ser depois do início.`); return; }
+      horarios[dia] = { inicio: h.inicio, fim: h.fim };
+    }
 
     const dados = {
-      dias: dias.sort(), inicio, fim, turma,
+      turma,
       local: $('#aula-local').value.trim(),
-      semana: $('#aula-repeticao').value === 'unica' ? semanaVista : ''
+      semana: $('#aula-repeticao').value === 'unica' ? semanaVista : '',
+      horarios
     };
     const emEdicao = aulaEditando;
     atualizar(() => {
       const existente = estado.aulas.find(a => a.id === emEdicao);
       if (existente) Object.assign(existente, dados);
       else estado.aulas.push({ id: idNovo(), ...dados });
-      estado.aulas.sort((x, y) => x.dias[0] - y.dias[0] || (x.inicio < y.inicio ? -1 : 1));
     });
     avisar(emEdicao ? 'Aula atualizada.' : dias.length > 1 ? `Aula adicionada em ${dias.length} dias.` : 'Aula adicionada à grade.');
     fecharFormAula();
