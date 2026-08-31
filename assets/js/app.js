@@ -288,6 +288,7 @@ function fecharEscolhaRecompensa() {
 /* ---------- Aulas ---------- */
 
 const HORAS_NO_MOSTRADOR = 12;
+let semanaVista = segundaDaSemana(hojeISO());
 const CORES_SETOR = ['#ff7a2f', '#3ecf8e', '#5b9cff', '#c77dff', '#ffb347', '#ff6b8a'];
 
 /* Ponto na circunferência para um horário: 12h no topo, sentido horário. */
@@ -308,7 +309,7 @@ function setorSVG(inicio, fim, raioInterno, raioExterno) {
 
 function renderMostrador(agora) {
   const minutos = agora.getHours() * 60 + agora.getMinutes() + agora.getSeconds() / 60;
-  const janela = aulasNaJanela(estado.aulas || [], agora, HORAS_NO_MOSTRADOR);
+  const janela = aulasNaJanela(estado.aulas || [], agora, HORAS_NO_MOSTRADOR, hoje);
 
   const marcas = Array.from({ length: 12 }, (_, i) => {
     const [x1, y1] = pontoDoRelogio(100, 100, 76, i * 60);
@@ -353,7 +354,7 @@ function renderRelogio() {
     weekday: 'long', day: '2-digit', month: 'long'
   });
 
-  const s = situacaoAulas(estado.aulas || [], agora);
+  const s = situacaoAulas(estado.aulas || [], agora, hoje);
   const caixa = $('#aula-agora');
 
   if (s.emAndamento) {
@@ -366,8 +367,8 @@ function renderRelogio() {
     caixa.className = 'aula-agora';
     caixa.innerHTML = `
       <p class="aula-rotulo">Sem aula agora · próxima</p>
-      <p class="aula-turma">${escapar(s.proxima.turma)}</p>
-      <p class="aula-detalhe">${escapar(DIAS_SEMANA[s.proxima.dia])}, ${escapar(s.proxima.inicio)}${s.proxima.local ? ' · ' + escapar(s.proxima.local) : ''} · em ${duracaoEmTexto(s.faltam)}</p>`;
+      <p class="aula-turma">${escapar(s.proxima.aula.turma)}</p>
+      <p class="aula-detalhe">${escapar(DIAS_SEMANA[isoParaData(s.proxima.dia).getDay()])}, ${escapar(s.proxima.aula.inicio)}${s.proxima.aula.local ? ' · ' + escapar(s.proxima.aula.local) : ''} · em ${duracaoEmTexto(s.faltam)}</p>`;
   } else {
     caixa.className = 'aula-agora';
     caixa.innerHTML = '<p class="aula-detalhe">Nenhuma aula cadastrada na grade.</p>';
@@ -376,25 +377,36 @@ function renderRelogio() {
 
 function renderGrade() {
   const aulas = estado.aulas || [];
-  const agora = new Date();
-  const dias = [1, 2, 3, 4, 5, 6, 0].filter(d => aulas.some(a => a.dia === d));
+  const semanaAtual = segundaDaSemana(hoje);
+  const fimSemana = somarDias(semanaVista, 6);
 
-  $('#grade-aulas').innerHTML = dias.map(d => `
-    <div class="dia-grade ${d === agora.getDay() ? 'hoje' : ''}">
-      <p class="dia-nome">${DIAS_SEMANA[d]}${d === agora.getDay() ? ' · hoje' : ''}</p>
+  $('#semana-titulo').textContent = semanaVista === semanaAtual
+    ? `Esta semana · ${formatarDataCurta(semanaVista)} a ${formatarDataCurta(fimSemana)}`
+    : `Semana de ${formatarDataCurta(semanaVista)} a ${formatarDataCurta(fimSemana)}`;
+  $('#semana-hoje').hidden = semanaVista === semanaAtual;
+
+  const dias = Array.from({ length: 7 }, (_, i) => somarDias(semanaVista, i))
+    .filter(dia => aulasDoDia(aulas, dia).length);
+
+  $('#grade-aulas').innerHTML = dias.map(dia => `
+    <div class="dia-grade ${dia === hoje ? 'hoje' : ''}">
+      <p class="dia-nome">${DIAS_SEMANA[isoParaData(dia).getDay()]} ${formatarDataCurta(dia)}${dia === hoje ? ' · hoje' : ''}</p>
       <ul class="lista-aulas">
-        ${aulas.filter(a => a.dia === d).map(a => `
+        ${aulasDoDia(aulas, dia).map(a => `
           <li class="aula">
             <span class="aula-hora">${escapar(a.inicio)}<small>${escapar(a.fim)}</small></span>
             <span class="aula-info">
               <strong>${escapar(a.turma)}</strong>
-              ${a.local ? `<small>${escapar(a.local)}</small>` : ''}
+              <small>${a.local ? escapar(a.local) + ' · ' : ''}${a.semana ? 'só nesta semana' : 'toda semana'}${a.dias.length > 1 ? ' · ' + a.dias.map(d => DIAS_SEMANA[d].slice(0, 3)).join(', ') : ''}</small>
             </span>
             <button class="icone-botao" data-remover-aula="${a.id}" title="Remover">✕</button>
           </li>`).join('')}
       </ul>
     </div>`).join('');
-  $('#aulas-vazio').hidden = aulas.length > 0;
+  $('#aulas-vazio').hidden = dias.length > 0;
+  $('#aulas-vazio').textContent = aulas.length
+    ? 'Nenhuma aula nesta semana.'
+    : 'Nenhuma aula na grade. Toque em + Aula.';
 }
 
 /* ---------- Moto ---------- */
@@ -643,8 +655,11 @@ function ligarEventos() {
     if (evento.target.id === 'modal-recompensa') fecharEscolhaRecompensa();
   });
 
-  $('#aula-dia').innerHTML = [1, 2, 3, 4, 5, 6, 0]
-    .map(d => `<option value="${d}">${DIAS_SEMANA[d]}</option>`).join('');
+  $('#aula-dias').innerHTML = [1, 2, 3, 4, 5, 6, 0].map(d => `
+    <label class="dia-chip">
+      <input type="checkbox" value="${d}">
+      <span>${DIAS_SEMANA[d].slice(0, 3)}</span>
+    </label>`).join('');
 
   $('#botao-nova-aula').addEventListener('click', () => {
     const form = $('#form-aula');
@@ -662,18 +677,22 @@ function ligarEventos() {
     const turma = $('#aula-turma').value.trim();
     const inicio = $('#aula-inicio').value;
     const fim = $('#aula-fim').value;
+    const dias = $$('#aula-dias input:checked').map(c => Number(c.value));
     if (!turma || !inicio || !fim) return;
+    if (!dias.length) { avisar('Marque pelo menos um dia da semana.'); return; }
     if (minutosDe(fim) <= minutosDe(inicio)) { avisar('O fim precisa ser depois do início.'); return; }
+
     atualizar(() => {
       estado.aulas.push({
-        id: idNovo(), dia: Number($('#aula-dia').value), inicio, fim, turma,
-        local: $('#aula-local').value.trim()
+        id: idNovo(), dias: dias.sort(), inicio, fim, turma,
+        local: $('#aula-local').value.trim(),
+        semana: $('#aula-repeticao').value === 'unica' ? semanaVista : ''
       });
-      estado.aulas.sort((x, y) => x.dia - y.dia || (x.inicio < y.inicio ? -1 : 1));
+      estado.aulas.sort((x, y) => x.dias[0] - y.dias[0] || (x.inicio < y.inicio ? -1 : 1));
     });
     $('#form-aula').hidden = true;
     $('#form-aula').reset();
-    avisar('Aula adicionada à grade.');
+    avisar(dias.length > 1 ? `Aula adicionada em ${dias.length} dias.` : 'Aula adicionada à grade.');
   });
 
   $('#grade-aulas').addEventListener('click', evento => {
@@ -683,6 +702,10 @@ function ligarEventos() {
       estado.aulas = estado.aulas.filter(a => a.id !== botao.dataset.removerAula);
     });
   });
+
+  $('#semana-anterior').addEventListener('click', () => { semanaVista = somarDias(semanaVista, -7); renderGrade(); });
+  $('#semana-proxima').addEventListener('click', () => { semanaVista = somarDias(semanaVista, 7); renderGrade(); });
+  $('#semana-hoje').addEventListener('click', () => { semanaVista = segundaDaSemana(hoje); renderGrade(); });
 
   /* O relógio anda sozinho, sem redesenhar o resto da tela. */
   setInterval(renderRelogio, 1000);

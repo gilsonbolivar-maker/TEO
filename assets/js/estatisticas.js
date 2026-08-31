@@ -130,24 +130,39 @@ function duracaoEmTexto(minutos) {
   return m ? `${h}h${String(m).padStart(2, '0')}` : `${h}h`;
 }
 
+/* A segunda-feira da semana de uma data — a chave que identifica cada semana. */
+function segundaDaSemana(iso) {
+  const d = isoParaData(iso);
+  const passo = (d.getDay() + 6) % 7;
+  return somarDias(iso, -passo);
+}
+
+function aulaValeNaData(aula, iso) {
+  if (!aula.dias.includes(isoParaData(iso).getDay())) return false;
+  return !aula.semana || aula.semana === segundaDaSemana(iso);
+}
+
+function aulasDoDia(aulas, iso) {
+  return aulas.filter(a => aulaValeNaData(a, iso))
+    .sort((x, y) => minutosDe(x.inicio) - minutosDe(y.inicio));
+}
+
 /* Qual aula está acontecendo e qual vem a seguir, a partir do momento informado. */
-function situacaoAulas(aulas, agora) {
-  const dia = agora.getDay();
+function situacaoAulas(aulas, agora, hojeIso) {
   const minutos = agora.getHours() * 60 + agora.getMinutes();
 
-  const emAndamento = aulas.find(a =>
-    a.dia === dia && minutosDe(a.inicio) <= minutos && minutos < minutosDe(a.fim)) || null;
+  const emAndamento = aulasDoDia(aulas, hojeIso).find(a =>
+    minutosDe(a.inicio) <= minutos && minutos < minutosDe(a.fim)) || null;
 
   let proxima = null;
   let faltam = 0;
   for (let adiante = 0; adiante < 7 && !proxima; adiante++) {
-    const diaAlvo = (dia + adiante) % 7;
-    const candidatas = aulas
-      .filter(a => a.dia === diaAlvo && (adiante > 0 || minutosDe(a.inicio) > minutos))
-      .sort((x, y) => minutosDe(x.inicio) - minutosDe(y.inicio));
+    const dia = somarDias(hojeIso, adiante);
+    const candidatas = aulasDoDia(aulas, dia)
+      .filter(a => adiante > 0 || minutosDe(a.inicio) > minutos);
     if (candidatas.length) {
-      proxima = candidatas[0];
-      faltam = adiante * 1440 + minutosDe(proxima.inicio) - minutos;
+      proxima = { aula: candidatas[0], dia };
+      faltam = adiante * 1440 + minutosDe(candidatas[0].inicio) - minutos;
     }
   }
 
@@ -159,16 +174,15 @@ function situacaoAulas(aulas, agora) {
   };
 }
 
-/* Aulas que aparecem nas próximas 12 horas, com início e fim recortados nessa janela.
-   É o que o mostrador circular precisa desenhar. */
-function aulasNaJanela(aulas, agora, horas) {
+/* Aulas que aparecem nas próximas horas, recortadas nessa janela. */
+function aulasNaJanela(aulas, agora, horas, hojeIso) {
   const minutosAgora = agora.getHours() * 60 + agora.getMinutes();
   const limite = minutosAgora + horas * 60;
   const janela = [];
 
-  aulas.forEach(aula => {
-    [0, 1].forEach(offset => {
-      if (aula.dia !== (agora.getDay() + offset) % 7) return;
+  [0, 1].forEach(offset => {
+    const dia = somarDias(hojeIso, offset);
+    aulasDoDia(aulas, dia).forEach(aula => {
       const inicio = minutosDe(aula.inicio) + offset * 1440;
       const fim = minutosDe(aula.fim) + offset * 1440;
       if (fim <= minutosAgora || inicio >= limite) return;

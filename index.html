@@ -86,11 +86,19 @@
           <button class="botao secundario compacto" id="botao-nova-aula">+ Aula</button>
         </div>
 
+        <div class="navegador-semana">
+          <button class="icone-botao" id="semana-anterior" title="Semana anterior">‹</button>
+          <div>
+            <p class="semana-titulo" id="semana-titulo"></p>
+            <button class="botao-link" id="semana-hoje" hidden>voltar para esta semana</button>
+          </div>
+          <button class="icone-botao" id="semana-proxima" title="Próxima semana">›</button>
+        </div>
+
         <form class="form-atividade" id="form-aula" hidden>
+          <p class="rotulo">Dias da semana (pode marcar mais de um)</p>
+          <div class="dias-semana" id="aula-dias"></div>
           <div class="linha-campos">
-            <label class="campo-rotulado">Dia
-              <select id="aula-dia"></select>
-            </label>
             <label class="campo-rotulado">Início
               <input id="aula-inicio" type="time" required>
             </label>
@@ -106,6 +114,12 @@
               <input id="aula-local" type="text" maxlength="24" placeholder="Sala 12">
             </label>
           </div>
+          <label class="campo-rotulado">Repetição
+            <select id="aula-repeticao">
+              <option value="sempre">Toda semana</option>
+              <option value="unica">Só na semana exibida</option>
+            </select>
+          </label>
           <div class="linha-botoes">
             <button type="submit" class="botao">Adicionar</button>
             <button type="button" class="botao secundario" id="botao-cancelar-aula">Cancelar</button>

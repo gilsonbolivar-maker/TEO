@@ -585,3 +585,46 @@ select {
 .legenda-setores strong { font-weight: 600; }
 .legenda-setores small { color: var(--texto-suave); font-size: .74rem; }
 .ponto-cor { width: 10px; height: 10px; border-radius: 3px; flex-shrink: 0; }
+
+/* ---------- Dias da semana e navegação por semana ---------- */
+
+.dias-semana { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 4px; }
+
+.dia-chip { cursor: pointer; }
+.dia-chip input { position: absolute; opacity: 0; pointer-events: none; }
+
+.dia-chip span {
+  display: inline-block;
+  border: 1px solid var(--borda);
+  border-radius: 999px;
+  padding: 7px 12px;
+  font-size: .8rem;
+  font-weight: 600;
+  color: var(--texto-suave);
+}
+
+.dia-chip input:checked + span {
+  background: var(--acento);
+  border-color: var(--acento);
+  color: #17110b;
+}
+
+.dia-chip input:focus-visible + span { outline: 2px solid var(--acento); outline-offset: 2px; }
+
+.navegador-semana {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 8px 4px 4px;
+  text-align: center;
+}
+
+.navegador-semana .icone-botao { font-size: 1.5rem; line-height: 1; padding: 2px 10px; color: var(--texto); }
+.navegador-semana .icone-botao:hover { color: var(--acento); }
+.semana-titulo { margin: 0; font-size: .84rem; font-weight: 600; }
+
+.botao-link {
+  border: 0; background: transparent; padding: 2px 0;
+  color: var(--acento); font: inherit; font-size: .74rem; cursor: pointer; text-decoration: underline;
+}

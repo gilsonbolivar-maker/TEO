@@ -124,15 +124,21 @@ function normalizar(estado) {
     moto: normalizarMoto(estado.moto),
     aulas: (Array.isArray(estado.aulas) ? estado.aulas : [])
       .filter(a => a && typeof a.turma === 'string' && a.turma.trim() && /^\d{2}:\d{2}$/.test(a.inicio || ''))
-      .map(a => ({
-        id: a.id || idNovo(),
-        dia: Math.min(6, Math.max(0, Number(a.dia) || 0)),
-        inicio: a.inicio,
-        fim: /^\d{2}:\d{2}$/.test(a.fim || '') ? a.fim : a.inicio,
-        turma: a.turma.trim(),
-        local: typeof a.local === 'string' ? a.local.trim() : ''
-      }))
-      .sort((x, y) => x.dia - y.dia || (x.inicio < y.inicio ? -1 : 1)),
+      .map(a => {
+        /* Versões antigas guardavam um único dia; agora a aula pode ter vários. */
+        const dias = Array.isArray(a.dias) ? a.dias : [a.dia];
+        return {
+          id: a.id || idNovo(),
+          dias: [...new Set(dias.map(d => Math.min(6, Math.max(0, Number(d) || 0))))].sort(),
+          inicio: a.inicio,
+          fim: /^\d{2}:\d{2}$/.test(a.fim || '') ? a.fim : a.inicio,
+          turma: a.turma.trim(),
+          local: typeof a.local === 'string' ? a.local.trim() : '',
+          /* Vazio = toda semana. Preenchido = só na semana que começa nessa segunda. */
+          semana: /^\d{4}-\d{2}-\d{2}$/.test(a.semana || '') ? a.semana : ''
+        };
+      })
+      .sort((x, y) => x.dias[0] - y.dias[0] || (x.inicio < y.inicio ? -1 : 1)),
     atividades: (Array.isArray(estado.atividades) ? estado.atividades : [])
       .filter(a => a && typeof a.titulo === 'string')
       .map(a => ({
