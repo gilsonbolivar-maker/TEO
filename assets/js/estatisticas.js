@@ -1,157 +1,55 @@
-/* Cálculos derivados do estado: pontos, sequências, nível e desempenho por hábito. */
+/* Cálculos derivados das atividades: percentuais, tempo parado e histórico. */
 
-const BONUS_DIA_PERFEITO = 20;
-
-function habitosAtivos(estado) {
-  return estado.habitos.filter(h => h.ativo);
+function pontosConcluidos(atividade) {
+  return atividade.pontos.filter(p => p.concluido).length;
 }
 
-function registroDo(estado, dia) {
-  return estado.registros[dia] || { habitos: {}, vitoria: '', energia: 0 };
+function percentualAtividade(atividade) {
+  return Math.round(pontosConcluidos(atividade) * PESO_DO_PONTO);
 }
 
-function marcadosNoDia(estado, dia) {
-  const marcados = registroDo(estado, dia).habitos;
-  return Object.keys(marcados).filter(id => marcados[id]);
+function diasParado(atividade, referencia) {
+  const d = Math.round((isoParaData(referencia) - isoParaData(atividade.atualizadoEm)) / 86400000);
+  return d > 0 ? d : 0;
 }
 
-function diaAtivo(estado, dia) {
-  return marcadosNoDia(estado, dia).length > 0;
+function formatarDataCurta(iso) {
+  if (!iso || iso.indexOf('-') === -1) return iso || '';
+  return isoParaData(iso).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
 }
 
-function diaPerfeito(estado, dia) {
-  const ativos = habitosAtivos(estado);
-  if (ativos.length === 0) return false;
-  const marcados = registroDo(estado, dia).habitos;
-  return ativos.every(h => marcados[h.id]);
+function ordenarAtividades(lista, referencia) {
+  return lista.slice().sort((a, b) =>
+    Number(a.concluida) - Number(b.concluida) ||
+    percentualAtividade(b) - percentualAtividade(a) ||
+    diasParado(b, referencia) - diasParado(a, referencia));
 }
 
-function pontosDoDia(estado, dia) {
-  const marcados = registroDo(estado, dia).habitos;
-  let total = 0;
-  estado.habitos.forEach(h => {
-    if (marcados[h.id]) total += h.pontos;
-  });
-  if (diaPerfeito(estado, dia)) total += BONUS_DIA_PERFEITO;
-  return total;
-}
-
-function progressoDoDia(estado, dia) {
-  const ativos = habitosAtivos(estado);
-  if (ativos.length === 0) return 0;
-  const marcados = registroDo(estado, dia).habitos;
-  const feitos = ativos.filter(h => marcados[h.id]).length;
-  return Math.round((feitos / ativos.length) * 100);
-}
-
-/* Dias com atividade, do mais antigo para o mais recente. */
-function diasComAtividade(estado) {
-  return Object.keys(estado.registros)
-    .filter(dia => diaAtivo(estado, dia))
-    .sort();
-}
-
-function sequenciaAtual(estado) {
-  const hoje = hojeISO();
-  let cursor = diaAtivo(estado, hoje) ? hoje : somarDias(hoje, -1);
-  let sequencia = 0;
-  while (diaAtivo(estado, cursor)) {
-    sequencia++;
-    cursor = somarDias(cursor, -1);
-  }
-  return sequencia;
-}
-
-function melhorSequencia(estado) {
-  const dias = diasComAtividade(estado);
-  let melhor = 0;
-  let atual = 0;
-  let anterior = null;
-  dias.forEach(dia => {
-    atual = (anterior && somarDias(anterior, 1) === dia) ? atual + 1 : 1;
-    if (atual > melhor) melhor = atual;
-    anterior = dia;
-  });
-  return melhor;
-}
-
-/* Quantas vezes o programa foi retomado depois de um dia em branco. */
-function retomadas(estado) {
-  const dias = diasComAtividade(estado);
-  let total = 0;
-  for (let i = 1; i < dias.length; i++) {
-    if (somarDias(dias[i - 1], 1) !== dias[i]) total++;
-  }
-  return total;
-}
-
-function nivelDe(pontos) {
-  let atual = NIVEIS[0];
-  for (const n of NIVEIS) {
-    if (pontos >= n.minimo) atual = n;
-  }
-  const proximo = NIVEIS.find(n => n.minimo > pontos) || null;
-  const base = atual.minimo;
-  const alvo = proximo ? proximo.minimo : atual.minimo;
-  const progresso = proximo ? Math.round(((pontos - base) / (alvo - base)) * 100) : 100;
-  return { atual, proximo, progresso, faltam: proximo ? alvo - pontos : 0 };
-}
-
-/* Percentual de dias em que cada hábito foi cumprido na janela informada. */
-function desempenhoPorHabito(estado, dias) {
-  const hoje = hojeISO();
-  const inicio = estado.perfil.inicio || hoje;
-  const janela = [];
-  for (let i = dias - 1; i >= 0; i--) {
-    const dia = somarDias(hoje, -i);
-    if (dia >= inicio) janela.push(dia);
-  }
-  return habitosAtivos(estado).map(h => {
-    const feitos = janela.filter(dia => registroDo(estado, dia).habitos[h.id]).length;
-    return {
-      habito: h,
-      feitos,
-      total: janela.length,
-      percentual: janela.length ? Math.round((feitos / janela.length) * 100) : 0
-    };
-  });
-}
-
-function estatisticas(estado) {
-  const dias = Object.keys(estado.registros).sort();
-  let pontos = 0;
-  let totalMarcacoes = 0;
-  let diasPerfeitos = 0;
-  let vitoriasRegistradas = 0;
-
-  dias.forEach(dia => {
-    pontos += pontosDoDia(estado, dia);
-    totalMarcacoes += marcadosNoDia(estado, dia).length;
-    if (diaPerfeito(estado, dia)) diasPerfeitos++;
-    if (registroDo(estado, dia).vitoria.trim()) vitoriasRegistradas++;
-  });
-
-  const pontuacao = pontos;
+function resumoGeral(estado) {
+  const todas = estado.atividades || [];
+  const andamento = todas.filter(a => !a.concluida);
+  const concluidas = todas.filter(a => a.concluida);
+  const feitos = todas.reduce((soma, a) => soma + pontosConcluidos(a), 0);
+  const totais = todas.length * PONTOS_POR_ATIVIDADE;
   return {
-    pontos: pontuacao,
-    totalMarcacoes,
-    diasAtivos: diasComAtividade(estado).length,
-    diasPerfeitos,
-    vitoriasRegistradas,
-    sequenciaAtual: sequenciaAtual(estado),
-    melhorSequencia: melhorSequencia(estado),
-    retomadas: retomadas(estado),
-    atividadesConcluidas: (estado.atividades || []).filter(a => a.concluida).length,
-    nivel: nivelDe(pontuacao)
+    total: todas.length,
+    andamento: andamento.length,
+    concluidas: concluidas.length,
+    pontosFeitos: feitos,
+    pontosTotais: totais,
+    mediaPercentual: totais ? Math.round((feitos / totais) * 100) : 0
   };
 }
 
-function conquistasDesbloqueadas(stats) {
-  return CONQUISTAS.map(c => ({ ...c, desbloqueada: c.teste(stats) }));
-}
-
-/* Frase do dia: determinística, muda a cada data. */
-function fraseDoDia(dia) {
-  const base = isoParaData(dia).getTime() / 86400000;
-  return FRASES[Math.floor(base) % FRASES.length];
+/* Todos os pontos já concluídos, do mais recente para o mais antigo. */
+function historicoDeAvancos(estado) {
+  const avancos = [];
+  (estado.atividades || []).forEach(atividade => {
+    atividade.pontos.forEach((ponto, indice) => {
+      if (ponto.concluido && ponto.em) {
+        avancos.push({ atividade, ponto, indice, em: ponto.em });
+      }
+    });
+  });
+  return avancos.sort((a, b) => (a.em < b.em ? 1 : a.em > b.em ? -1 : 0));
 }

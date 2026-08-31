@@ -1,8 +1,6 @@
 # Programa Motivacional · Teo Neto
 
-Programa de hábitos diários — um **plano escrito** ([PLANO.md](PLANO.md)) e um **app web** que executa esse plano no dia a dia: hábitos, sequência (streak), pontos, níveis, medalhas, diário e histórico.
-
-Rotina contínua: não tem data de término, o objetivo é a constância.
+Acompanhamento de desenvolvimento em atividades específicas — um **plano escrito** ([PLANO.md](PLANO.md)) e um **app web** que o executa: cada atividade tem 5 pontos, cada ponto fecha 20% de um círculo.
 
 ## Como usar
 
@@ -18,20 +16,14 @@ No celular, adicione a página à tela inicial para abrir como um app.
 
 ## O que o app faz
 
-- **Hoje** — frase motivacional do dia, a lista de atividades com a régua de progresso de cada uma, e o diário da "vitória do dia" com o registro de energia (1 a 5).
-- **Uma aba por atividade** — cada atividade ganha sua própria aba na navegação, com o círculo grande, a anotação de onde parou e os cinco pontos. A barra de abas rola para o lado quando há muitas.
-- **Hábitos** — aba própria com os hábitos do dia, o anel de progresso e o total de pontos da data.
-- **Minhas atividades** — objetivos que atravessam semanas (livro, curso, projeto). A lista mostra o nome com uma **régua de progresso** embaixo. Cada atividade se divide em **5 pontos definidos por você**, valendo 20% cada: concluir um ponto acende uma fatia do **círculo**, e quando as cinco acendem o círculo fecha e a atividade é concluída sozinha. Guarda também a anotação de onde você parou e a data de cada ponto concluído.
-- **Progresso** — sequência atual e melhor sequência, dias ativos e perfeitos, mapa de calor das últimas 12 semanas, desempenho de cada hábito nos últimos 30 dias e revisão dos últimos 7 dias com média e recado automático.
-- **Conquistas** — 12 medalhas, de "Primeiro Passo" a "Centurião" (100 dias seguidos).
-- **Ajustes** — nome, objetivo do programa, criar/desativar/remover hábitos (com sugestões prontas), exportar e importar backup, reiniciar tudo.
+O programa acompanha o desenvolvimento em **atividades específicas**. Cada atividade se divide em **5 pontos definidos por quem faz**, valendo **20%** cada. Concluir um ponto acende uma fatia do círculo; quando as cinco acendem, o círculo fecha e a atividade é concluída sozinha.
 
-### Regras de pontuação
+- **Início** — o resumo em números (em andamento, concluídas, pontos concluídos, média geral) e a lista de atividades, cada uma com a **régua de progresso**, os pontos vencidos e há quanto tempo não avança.
+- **Uma aba por atividade** — círculo grande, anotação de onde parou e os cinco pontos. A barra de abas rola quando há muitas.
+- **Progresso** — o andamento de todas as atividades lado a lado e o histórico de avanços com a data de cada ponto concluído.
+- **Ajustes** — nome, objetivo geral, receita do lembrete diário e backup dos dados.
 
-- Cada hábito vale os pontos definidos nele (padrão 10; ajustável de 1 a 100).
-- Dia com todos os hábitos ativos cumpridos = **dia perfeito**, +20 de bônus.
-- Os pontos acumulados sobem o nível, de *Semente* (0) a *Mestre* (6500). A tabela completa está no [plano](PLANO.md#5-pontos-níveis-e-medalhas).
-- A sequência conta dias seguidos com pelo menos um hábito cumprido.
+O app é deliberadamente enxuto: sem hábitos diários, medalhas, pontuação de jogo ou diário. A tela mostra o que informa o progresso e nada mais.
 
 ## Publicar online
 
@@ -114,9 +106,9 @@ assets/img/                 ícones do aplicativo
 servidor.js                 servidor estático opcional (só para Render Web Service)
 package.json                define o comando `npm start`
 assets/css/estilo.css       estilos (tema escuro, com versão clara automática)
-assets/js/dados.js          frases, hábitos sugeridos, níveis e medalhas
+assets/js/dados.js          frases e o número de pontos por atividade
 assets/js/armazenamento.js  leitura/escrita no localStorage, datas, backup
-assets/js/estatisticas.js   pontos, sequências, níveis, desempenho
+assets/js/estatisticas.js   percentuais, tempo parado e histórico de avanços
 assets/js/app.js            renderização e eventos
 PLANO.md                    o programa escrito: rituais, regras e protocolos
 render.yaml                 configuração de publicação no Render (site estático)
@@ -125,7 +117,5 @@ render.yaml                 configuração de publicação no Render (site está
 
 ## Personalizar
 
-- **Frases:** edite o array `FRASES` em `assets/js/dados.js`.
-- **Hábitos iniciais e sugestões:** `HABITOS_PADRAO` e `HABITOS_SUGERIDOS` no mesmo arquivo.
-- **Níveis e medalhas:** `NIVEIS` e `CONQUISTAS`, também em `dados.js`.
-- **Bônus de dia perfeito:** `BONUS_DIA_PERFEITO` em `assets/js/estatisticas.js`.
+- **Frases do rodapé:** array `FRASES` em `assets/js/dados.js`.
+- **Quantidade de pontos por atividade:** `PONTOS_POR_ATIVIDADE` no mesmo arquivo — o peso de cada ponto e o círculo se ajustam sozinhos.

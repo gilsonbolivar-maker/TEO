@@ -2,11 +2,17 @@
 
 let estado = carregar();
 let hoje = hojeISO();
+let abaAtual = 'inicio';
 let temporizadorAviso = null;
 let temporizadorSalvar = null;
 
 const $ = sel => document.querySelector(sel);
 const $$ = sel => Array.from(document.querySelectorAll(sel));
+
+const ABAS_FINAIS = [
+  { id: 'progresso', rotulo: 'Progresso' },
+  { id: 'ajustes', rotulo: 'Ajustes' }
+];
 
 function escapar(texto) {
   return String(texto).replace(/[&<>"']/g, c => (
@@ -24,232 +30,94 @@ function avisar(mensagem) {
   el.textContent = mensagem;
   el.hidden = false;
   clearTimeout(temporizadorAviso);
-  temporizadorAviso = setTimeout(() => { el.hidden = true; }, 2600);
+  temporizadorAviso = setTimeout(() => { el.hidden = true; }, 2400);
 }
 
-function registroDeHoje() {
-  if (!estado.registros[hoje]) {
-    estado.registros[hoje] = { habitos: {}, vitoria: '', energia: 0 };
-  }
-  return estado.registros[hoje];
+function textoParado(atividade) {
+  if (pontosConcluidos(atividade) === 0) return 'ainda não começou';
+  const dias = diasParado(atividade, hoje);
+  if (dias === 0) return 'avançou hoje';
+  if (dias === 1) return 'avançou ontem';
+  return `sem avançar há ${dias} dias`;
 }
 
-function saudacao() {
-  const h = new Date().getHours();
-  if (h < 12) return 'Bom dia';
-  if (h < 18) return 'Boa tarde';
-  return 'Boa noite';
+/* ---------- Abas ---------- */
+
+function renderAbas() {
+  const atividades = (estado.atividades || []).map(a => ({
+    id: 'atv:' + a.id,
+    rotulo: `${a.icone} ${a.titulo}`,
+    concluida: a.concluida
+  }));
+  const todas = [{ id: 'inicio', rotulo: 'Início' }, ...atividades, ...ABAS_FINAIS];
+
+  $('#abas').innerHTML = todas.map(aba => `
+    <button class="aba ${aba.id === abaAtual ? 'ativa' : ''} ${aba.id.startsWith('atv:') ? 'aba-atividade' : ''}"
+            data-aba="${escapar(aba.id)}" role="tab">${escapar(aba.rotulo)}${aba.concluida ? ' ✓' : ''}</button>
+  `).join('');
 }
 
-function dataPorExtenso(iso) {
-  return isoParaData(iso).toLocaleDateString('pt-BR', {
-    weekday: 'long', day: '2-digit', month: 'long'
-  });
+function atividadeDaAba() {
+  if (!abaAtual.startsWith('atv:')) return null;
+  return (estado.atividades || []).find(a => a.id === abaAtual.slice(4)) || null;
 }
 
-/* ---------- Renderização ---------- */
+function trocarAba(nome) {
+  if (nome.startsWith('atv:') && !(estado.atividades || []).some(a => 'atv:' + a.id === nome)) nome = 'inicio';
+  abaAtual = nome;
+  const alvo = nome.startsWith('atv:') ? 'painel-atividade' : 'painel-' + nome;
+  $$('.painel').forEach(p => p.classList.toggle('ativo', p.id === alvo));
+  renderAbas();
+  if (nome.startsWith('atv:')) renderPainelAtividade();
+  const aberta = $('#abas .aba.ativa');
+  if (aberta) aberta.scrollIntoView({ block: 'nearest', inline: 'center', behavior: 'smooth' });
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
 
-function renderTopo(stats) {
+/* ---------- Topo e início ---------- */
+
+function renderTopo() {
   const nome = estado.perfil.nome || 'Teo Neto';
   $('#nome-usuario').textContent = nome;
   $('#avatar').textContent = nome.trim().charAt(0).toUpperCase() || 'T';
-  $('#saudacao').textContent = saudacao() + ',';
-  $('#metrica-sequencia').textContent = stats.sequenciaAtual;
-  $('#metrica-pontos').textContent = stats.pontos;
-  $('#metrica-nivel').textContent = stats.nivel.atual.nivel;
-  $('#metrica-nivel-nome').textContent = stats.nivel.atual.nome;
-
-  $('#barra-nivel').style.width = stats.nivel.progresso + '%';
-  $('#barra-nivel-texto').textContent = stats.nivel.proximo
-    ? `Nível ${stats.nivel.atual.nivel} · ${stats.nivel.atual.nome} — faltam ${stats.nivel.faltam} pts para ${stats.nivel.proximo.nome}`
-    : `Nível máximo alcançado: ${stats.nivel.atual.nome}`;
-}
-
-function renderHoje() {
-  const frase = fraseDoDia(hoje);
-  $('#frase-texto').textContent = '“' + frase.texto + '”';
-  $('#frase-autor').textContent = '— ' + frase.autor;
-
-  const campoVitoria = $('#campo-vitoria');
-  if (document.activeElement !== campoVitoria) campoVitoria.value = registroDeHoje().vitoria;
-
-  const energia = registroDeHoje().energia;
-  $('#energia').innerHTML = ['😴', '🙁', '😐', '🙂', '🤩']
-    .map((emoji, i) => `<button type="button" data-energia="${i + 1}" class="${energia === i + 1 ? 'ativa' : ''}" title="Energia ${i + 1} de 5">${emoji}</button>`)
-    .join('');
-
   const objetivo = (estado.perfil.objetivo || '').trim();
-  $('#cartao-objetivo').hidden = !objetivo;
-  $('#objetivo-texto').textContent = objetivo;
+  $('#topo-objetivo').textContent = objetivo;
+  $('#topo-objetivo').hidden = !objetivo;
 }
 
-function renderHabitos() {
-  $('#data-hoje').textContent = dataPorExtenso(hoje);
-
-  const ativos = habitosAtivos(estado);
-  const marcados = registroDeHoje().habitos;
-  const lista = $('#lista-habitos');
-
-  lista.innerHTML = ativos.map(h => `
-    <li class="item-habito ${marcados[h.id] ? 'feito' : ''}" data-habito="${h.id}">
-      <span class="marcador">✓</span>
-      <span class="habito-icone">${escapar(h.icone)}</span>
-      <span class="habito-nome">${escapar(h.nome)}</span>
-      <span class="habito-pontos">+${h.pontos}</span>
-    </li>
-  `).join('');
-  $('#habitos-vazio').hidden = ativos.length > 0;
-
-  const pct = progressoDoDia(estado, hoje);
-  const anel = $('#anel-progresso');
-  anel.style.setProperty('--p', pct);
-  $('#anel-texto').textContent = pct + '%';
-
-  const feitos = ativos.filter(h => marcados[h.id]).length;
-  const pontos = pontosDoDia(estado, hoje);
-  let resumo = `${feitos} de ${ativos.length} hábitos · ${pontos} pontos hoje`;
-  if (ativos.length && feitos === ativos.length) resumo += ' · dia perfeito! 💯 (+' + BONUS_DIA_PERFEITO + ' de bônus)';
-  else if (feitos === 0) resumo += ' · comece pelo mais fácil.';
-  $('#resumo-dia').textContent = resumo;
+function renderResumo() {
+  const r = resumoGeral(estado);
+  $('#resumo').innerHTML = `
+    <div class="resumo-item"><span class="resumo-valor">${r.andamento}</span><span class="resumo-rotulo">em andamento</span></div>
+    <div class="resumo-item"><span class="resumo-valor">${r.concluidas}</span><span class="resumo-rotulo">concluídas</span></div>
+    <div class="resumo-item"><span class="resumo-valor">${r.pontosFeitos}<small>/${r.pontosTotais}</small></span><span class="resumo-rotulo">pontos concluídos</span></div>
+    <div class="resumo-item"><span class="resumo-valor">${r.mediaPercentual}%</span><span class="resumo-rotulo">média geral</span></div>`;
 }
 
-function renderProgresso(stats) {
-  const cartoes = [
-    { valor: stats.sequenciaAtual, rotulo: 'sequência atual (dias)' },
-    { valor: stats.melhorSequencia, rotulo: 'melhor sequência' },
-    { valor: stats.diasAtivos, rotulo: 'dias ativos' },
-    { valor: stats.diasPerfeitos, rotulo: 'dias perfeitos' },
-    { valor: stats.pontos, rotulo: 'pontos acumulados' },
-    { valor: stats.totalMarcacoes, rotulo: 'hábitos cumpridos' }
-  ];
-  $('#grade-stats').innerHTML = cartoes.map(c => `
-    <div class="stat">
-      <div class="stat-valor">${c.valor}</div>
-      <div class="stat-rotulo">${c.rotulo}</div>
-    </div>
-  `).join('');
-
-  renderMapaCalor();
-
-  const desempenho = desempenhoPorHabito(estado, 30);
-  $('#desempenho-habitos').innerHTML = desempenho.length ? desempenho.map(d => `
-    <div class="linha-desempenho">
-      <div class="cabecalho">
-        <span>${escapar(d.habito.icone)} ${escapar(d.habito.nome)}</span>
-        <span>${d.percentual}% <small>(${d.feitos}/${d.total})</small></span>
-      </div>
-      <div class="trilha"><div style="width:${d.percentual}%"></div></div>
-    </div>
-  `).join('') : '<p class="vazio">Adicione hábitos para ver o desempenho.</p>';
-
-  const semana = [];
-  for (let i = 6; i >= 0; i--) {
-    const dia = somarDias(hoje, -i);
-    semana.push({
-      dia,
-      rotulo: isoParaData(dia).toLocaleDateString('pt-BR', { weekday: 'short', day: '2-digit' }),
-      pct: progressoDoDia(estado, dia)
-    });
-  }
-  const media = Math.round(semana.reduce((s, d) => s + d.pct, 0) / 7);
-  $('#revisao-semana').innerHTML = `
-    <p class="legenda">Média dos últimos 7 dias: <strong>${media}%</strong> — ${mensagemSemana(media)}</p>
-    <div class="semana">
-      ${semana.map(d => `
-        <div class="dia-semana">
-          <p class="rotulo-dia">${escapar(d.rotulo)}</p>
-          <div class="trilha"><div style="width:${d.pct}%"></div></div>
-          <span class="valor">${d.pct}%</span>
-        </div>
-      `).join('')}
-    </div>
-  `;
+function linhaAtividade(a) {
+  const pct = percentualAtividade(a);
+  return `
+    <li class="atividade ${a.concluida ? 'fechada' : ''}" data-atividade="${a.id}">
+      <button class="atividade-cabecalho" data-acao="abrir">
+        <span class="atividade-icone">${escapar(a.icone)}</span>
+        <span class="atividade-info">
+          <span class="atividade-titulo">${escapar(a.titulo)}</span>
+          <span class="regua"><span style="width:${pct}%"></span></span>
+          <span class="atividade-linha-info">${pontosConcluidos(a)} de ${PONTOS_POR_ATIVIDADE} pontos · ${a.concluida ? 'concluída' : textoParado(a)}</span>
+        </span>
+        <span class="atividade-pct">${pct}%</span>
+      </button>
+    </li>`;
 }
 
-function mensagemSemana(media) {
-  if (media >= 90) return 'semana impecável, mantenha o ritmo.';
-  if (media >= 70) return 'semana forte; ajuste os detalhes.';
-  if (media >= 40) return 'dá para melhorar: escolha um hábito para não falhar nenhum dia.';
-  if (media > 0) return 'semana difícil. Recomece hoje, sem drama.';
-  return 'nenhum registro ainda nesta semana. Comece agora.';
+function renderAtividades() {
+  const todas = ordenarAtividades(estado.atividades || [], hoje);
+  $('#lista-atividades').innerHTML = todas.map(linhaAtividade).join('');
+  $('#atividades-vazio').hidden = todas.length > 0;
 }
 
-function renderMapaCalor() {
-  const total = 84;
-  let inicio = somarDias(hoje, -(total - 1));
-  inicio = somarDias(inicio, -isoParaData(inicio).getDay());
-  const fimSemana = somarDias(hoje, 6 - isoParaData(hoje).getDay());
+/* ---------- Aba de uma atividade ---------- */
 
-  const celulas = [];
-  let cursor = inicio;
-  while (cursor <= fimSemana) {
-    if (cursor > hoje) {
-      celulas.push(`<i class="celula n0 fora" title="${cursor}"></i>`);
-    } else {
-      const pct = progressoDoDia(estado, cursor);
-      const nivel = pct === 0 ? 0 : pct < 34 ? 1 : pct < 67 ? 2 : pct < 100 ? 3 : 4;
-      celulas.push(`<i class="celula n${nivel}" title="${dataPorExtenso(cursor)} — ${pct}%"></i>`);
-    }
-    cursor = somarDias(cursor, 1);
-  }
-  $('#mapa-calor').innerHTML = celulas.join('');
-}
-
-function renderConquistas(stats) {
-  const lista = conquistasDesbloqueadas(stats);
-  const abertas = lista.filter(c => c.desbloqueada).length;
-  $('#conquistas-contador').textContent = `${abertas} de ${lista.length} medalhas conquistadas.`;
-  $('#grade-conquistas').innerHTML = lista.map(c => `
-    <div class="conquista ${c.desbloqueada ? '' : 'bloqueada'}">
-      <div class="icone">${c.desbloqueada ? c.icone : '🔒'}</div>
-      <p class="nome">${escapar(c.nome)}</p>
-      <p class="desc">${escapar(c.desc)}</p>
-    </div>
-  `).join('');
-}
-
-function renderAjustes() {
-  if (document.activeElement !== $('#campo-nome')) $('#campo-nome').value = estado.perfil.nome || '';
-  if (document.activeElement !== $('#campo-objetivo')) $('#campo-objetivo').value = estado.perfil.objetivo || '';
-
-  $('#lista-editavel').innerHTML = estado.habitos.map(h => `
-    <li class="item-editavel ${h.ativo ? '' : 'inativo'}" data-habito="${h.id}">
-      <span>${escapar(h.icone)}</span>
-      <span class="nome">${escapar(h.nome)}</span>
-      <span class="habito-pontos">+${h.pontos}</span>
-      <button class="icone-botao" data-acao="alternar" title="${h.ativo ? 'Desativar' : 'Reativar'}">${h.ativo ? '👁️' : '🚫'}</button>
-      <button class="icone-botao" data-acao="remover" title="Remover">🗑️</button>
-    </li>
-  `).join('') || '<li class="vazio">Nenhum hábito cadastrado.</li>';
-
-  $('#sugestoes').innerHTML = HABITOS_SUGERIDOS
-    .filter(s => !estado.habitos.some(h => h.nome === s.nome))
-    .map((s, i) => `<button type="button" class="chip" data-sugestao="${i}">${escapar(s.icone)} ${escapar(s.nome)}</button>`)
-    .join('') || '<p class="legenda">Todas as sugestões já estão na sua lista.</p>';
-}
-
-/* ---------- Quadro de atividades: 5 pontos, cada um vale 20% ---------- */
-
-function pontosConcluidos(atividade) {
-  return atividade.pontos.filter(p => p.concluido).length;
-}
-
-function percentualAtividade(atividade) {
-  return Math.round(pontosConcluidos(atividade) * PESO_DO_PONTO);
-}
-
-function diasParado(atividade) {
-  const d = Math.round((isoParaData(hoje) - isoParaData(atividade.atualizadoEm)) / 86400000);
-  return d > 0 ? d : 0;
-}
-
-function textoParado(dias) {
-  if (dias === 0) return 'avançou hoje';
-  if (dias === 1) return 'avançou ontem';
-  return `parado há ${dias} dias`;
-}
-
-/* Círculo dividido em 5 fatias iguais; cada ponto concluído acende a sua. */
 function circuloDePontos(atividade) {
   const raio = 42;
   const volta = 2 * Math.PI * raio;
@@ -284,43 +152,13 @@ function listaDePontos(atividade) {
              value="${escapar(ponto.titulo)}"
              placeholder="Ponto ${i + 1}: o que precisa acontecer"
              aria-label="Nome do ponto ${i + 1}">
-      <span class="ponto-peso">${ponto.concluido ? escapar(ponto.em) : PESO_DO_PONTO + '%'}</span>
+      <span class="ponto-peso">${ponto.concluido ? escapar(formatarDataCurta(ponto.em)) : PESO_DO_PONTO + '%'}</span>
     </li>`).join('');
 }
 
-function cartaoAtividade(a) {
-  const pct = percentualAtividade(a);
-  return `
-    <li class="atividade ${a.concluida ? 'fechada' : ''}" data-atividade="${a.id}">
-      <button class="atividade-cabecalho" data-acao="abrir">
-        <span class="atividade-icone">${escapar(a.icone)}</span>
-        <span class="atividade-info">
-          <span class="atividade-titulo">${escapar(a.titulo)}</span>
-          <span class="regua"><span style="width:${pct}%"></span></span>
-        </span>
-        <span class="atividade-pct">${pct}%</span>
-      </button>
-    </li>`;
-}
-
-function renderAtividades() {
-  const todas = (estado.atividades || []).slice();
-
-  /* Em andamento primeiro, das mais avançadas para as menos; concluídas no fim. */
-  todas.sort((a, b) =>
-    Number(a.concluida) - Number(b.concluida) ||
-    percentualAtividade(b) - percentualAtividade(a) ||
-    diasParado(b) - diasParado(a));
-
-  $('#lista-atividades').innerHTML = todas.map(cartaoAtividade).join('');
-  $('#atividades-vazio').hidden = todas.length > 0;
-}
-
-/* A aba exclusiva da atividade: círculo grande, onde parei e os 5 pontos. */
 function renderPainelAtividade() {
   const a = atividadeDaAba();
-  if (!a) { trocarAba('hoje'); return; }
-  const dias = diasParado(a);
+  if (!a) { trocarAba('inicio'); return; }
 
   $('#painel-atividade').innerHTML = `
     <article class="cartao cartao-atividade">
@@ -328,7 +166,7 @@ function renderPainelAtividade() {
         <span class="atividade-icone">${escapar(a.icone)}</span>
         <h2>${escapar(a.titulo)}</h2>
       </div>
-      <p class="detalhe-parado">${a.concluida ? 'Objetivo concluído 🏁' : textoParado(dias)}</p>
+      <p class="detalhe-parado">${a.concluida ? 'Objetivo concluído 🏁' : textoParado(a)}</p>
 
       ${circuloDePontos(a)}
 
@@ -347,7 +185,69 @@ function renderPainelAtividade() {
   $('#painel-atividade').dataset.atividade = a.id;
 }
 
-function ligarEventosAtividades() {
+/* ---------- Progresso ---------- */
+
+function renderProgresso() {
+  const todas = ordenarAtividades(estado.atividades || [], hoje);
+  $('#andamento').innerHTML = todas.length ? todas.map(a => {
+    const pct = percentualAtividade(a);
+    const parado = diasParado(a, hoje);
+    return `
+      <div class="linha-andamento">
+        <div class="cabecalho">
+          <span>${escapar(a.icone)} ${escapar(a.titulo)}</span>
+          <span class="${!a.concluida && parado >= 3 ? 'alerta' : ''}">${pct}%</span>
+        </div>
+        <div class="regua"><span style="width:${pct}%"></span></div>
+        <p class="legenda">${pontosConcluidos(a)} de ${PONTOS_POR_ATIVIDADE} pontos · ${a.concluida ? 'concluída' : textoParado(a)}</p>
+      </div>`;
+  }).join('') : '<p class="vazio">Crie uma atividade para acompanhar o andamento.</p>';
+
+  const avancos = historicoDeAvancos(estado);
+  $('#historico').innerHTML = avancos.slice(0, 20).map(av => `
+    <li class="avanco">
+      <span class="avanco-data">${escapar(formatarDataCurta(av.em))}</span>
+      <span class="avanco-texto">
+        <strong>${escapar(av.ponto.titulo)}</strong>
+        <small>${escapar(av.atividade.icone)} ${escapar(av.atividade.titulo)} · ponto ${av.indice + 1}</small>
+      </span>
+    </li>`).join('');
+  $('#historico-vazio').hidden = avancos.length > 0;
+}
+
+/* ---------- Render geral ---------- */
+
+function render() {
+  renderTopo();
+  renderAbas();
+  renderResumo();
+  renderAtividades();
+  renderProgresso();
+  if (abaAtual.startsWith('atv:')) renderPainelAtividade();
+
+  const frase = fraseDoDia(hoje);
+  $('#frase-rodape').textContent = `“${frase.texto}” — ${frase.autor}`;
+}
+
+function fraseDoDia(dia) {
+  const base = isoParaData(dia).getTime() / 86400000;
+  return FRASES[Math.floor(base) % FRASES.length];
+}
+
+function atualizar(mudanca) {
+  mudanca();
+  persistir();
+  render();
+}
+
+/* ---------- Eventos ---------- */
+
+function ligarEventos() {
+  $('#abas').addEventListener('click', evento => {
+    const botao = evento.target.closest('.aba');
+    if (botao) trocarAba(botao.dataset.aba);
+  });
+
   $('#botao-nova-atividade').addEventListener('click', () => {
     const form = $('#form-atividade');
     form.hidden = !form.hidden;
@@ -363,23 +263,24 @@ function ligarEventosAtividades() {
     evento.preventDefault();
     const titulo = $('#atv-titulo').value.trim();
     if (!titulo) return;
-    const novo = {
+    const nova = {
       id: idNovo(),
       titulo,
       icone: $('#atv-icone').value.trim() || '📌',
       nota: '',
       concluida: false,
+      criadaEm: hoje,
       atualizadoEm: hoje,
       pontos: pontosVazios()
     };
-    atualizar(() => { estado.atividades.push(novo); });
+    atualizar(() => { estado.atividades.push(nova); });
     $('#form-atividade').hidden = true;
     $('#form-atividade').reset();
-    trocarAba('atv:' + novo.id);
+    trocarAba('atv:' + nova.id);
     avisar('Atividade criada. Defina os 5 pontos.');
   });
 
-  /* Digitação: nome dos pontos e anotação de onde parou salvam a cada tecla. */
+  /* Digitação grava a cada tecla, para nada se perder se o app for fechado. */
   document.addEventListener('input', evento => {
     const item = evento.target.closest('[data-atividade]');
     if (!item) return;
@@ -389,7 +290,6 @@ function ligarEventosAtividades() {
     if (evento.target.classList.contains('ponto-titulo')) {
       atividade.pontos[Number(evento.target.dataset.indice)].titulo = evento.target.value;
       persistir();
-      /* Ponto sem nome não pode ser concluído: libera o botão assim que ganha um. */
       const marca = evento.target.closest('.ponto').querySelector('.ponto-marca');
       if (marca) marca.disabled = evento.target.value.trim() === '';
     } else if (evento.target.classList.contains('atividade-nota-campo')) {
@@ -416,14 +316,14 @@ function ligarEventosAtividades() {
       const ponto = atividade.pontos[Number(gatilho.dataset.indice)];
       atualizar(() => {
         ponto.concluido = !ponto.concluido;
-        ponto.em = ponto.concluido ? isoParaData(hoje).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' }) : '';
+        ponto.em = ponto.concluido ? hoje : '';
         atividade.atualizadoEm = hoje;
         /* O círculo fechou: a atividade se conclui sozinha. */
         atividade.concluida = pontosConcluidos(atividade) === PONTOS_POR_ATIVIDADE;
       });
       renderPainelAtividade();
       if (atividade.concluida) avisar('🏁 Círculo fechado! Objetivo concluído.');
-      else if (ponto.concluido) avisar(`+${PESO_DO_PONTO}% · ${percentualAtividade(atividade)}% do círculo`);
+      else if (ponto.concluido) avisar(`${percentualAtividade(atividade)}% do círculo fechado`);
 
     } else if (acao === 'reabrir') {
       atualizar(() => { atividade.concluida = false; atividade.atualizadoEm = hoje; });
@@ -431,181 +331,21 @@ function ligarEventosAtividades() {
 
     } else if (acao === 'remover' && confirm(`Remover "${atividade.titulo}"?`)) {
       atualizar(() => { estado.atividades = estado.atividades.filter(a => a.id !== id); });
-      trocarAba('hoje');
+      trocarAba('inicio');
       avisar('Atividade removida.');
     }
   });
-}
-
-function render() {
-  const stats = estatisticas(estado);
-  renderTopo(stats);
-  renderAbas();
-  renderHoje();
-  renderHabitos();
-  renderAtividades();
-  if (abaAtual.startsWith('atv:')) renderPainelAtividade();
-  renderProgresso(stats);
-  renderConquistas(stats);
-  renderAjustes();
-  return stats;
-}
-
-/* Aplica uma mudança e avisa sobre nível novo ou medalha nova. */
-function atualizar(mudanca) {
-  const antes = estatisticas(estado);
-  const medalhasAntes = conquistasDesbloqueadas(antes).filter(c => c.desbloqueada).map(c => c.id);
-  mudanca();
-  persistir();
-  const depois = render();
-
-  if (depois.nivel.atual.nivel > antes.nivel.atual.nivel) {
-    avisar(`🎉 Novo nível: ${depois.nivel.atual.nome}!`);
-    return;
-  }
-  const nova = conquistasDesbloqueadas(depois)
-    .filter(c => c.desbloqueada && !medalhasAntes.includes(c.id))[0];
-  if (nova) avisar(`${nova.icone} Medalha desbloqueada: ${nova.nome}`);
-}
-
-/* ---------- Eventos ---------- */
-
-const ABAS_FINAIS = [
-  { id: 'habitos', rotulo: 'Hábitos' },
-  { id: 'progresso', rotulo: 'Progresso' },
-  { id: 'conquistas', rotulo: 'Conquistas' },
-  { id: 'ajustes', rotulo: 'Ajustes' }
-];
-
-let abaAtual = 'hoje';
-
-/* A navegação tem uma aba por atividade: cada círculo ganha sua própria tela. */
-function renderAbas() {
-  const atividades = (estado.atividades || []).map(a => ({
-    id: 'atv:' + a.id,
-    rotulo: `${a.icone} ${a.titulo}`,
-    concluida: a.concluida
-  }));
-
-  const todas = [{ id: 'hoje', rotulo: 'Hoje' }, ...atividades, ...ABAS_FINAIS];
-
-  $('#abas').innerHTML = todas.map(aba => `
-    <button class="aba ${aba.id === abaAtual ? 'ativa' : ''} ${aba.id.startsWith('atv:') ? 'aba-atividade' : ''}"
-            data-aba="${escapar(aba.id)}" role="tab">${escapar(aba.rotulo)}${aba.concluida ? ' ✓' : ''}</button>
-  `).join('');
-}
-
-function atividadeDaAba() {
-  if (!abaAtual.startsWith('atv:')) return null;
-  return (estado.atividades || []).find(a => a.id === abaAtual.slice(4)) || null;
-}
-
-function trocarAba(nome) {
-  /* Se a atividade da aba sumiu (removida), volta para o começo. */
-  if (nome.startsWith('atv:') && !(estado.atividades || []).some(a => 'atv:' + a.id === nome)) nome = 'hoje';
-  abaAtual = nome;
-  const alvo = nome.startsWith('atv:') ? 'painel-atividade' : 'painel-' + nome;
-  $$('.painel').forEach(p => p.classList.toggle('ativo', p.id === alvo));
-  renderAbas();
-  if (nome.startsWith('atv:')) renderPainelAtividade();
-  const aberta = $('#abas .aba.ativa');
-  if (aberta) aberta.scrollIntoView({ block: 'nearest', inline: 'center', behavior: 'smooth' });
-  window.scrollTo({ top: 0, behavior: 'smooth' });
-}
-
-function ligarEventos() {
-  $('#abas').addEventListener('click', evento => {
-    const botao = evento.target.closest('.aba');
-    if (botao) trocarAba(botao.dataset.aba);
-  });
-
-  $('#lista-habitos').addEventListener('click', evento => {
-    const item = evento.target.closest('[data-habito]');
-    if (!item) return;
-    atualizar(() => {
-      const marcados = registroDeHoje().habitos;
-      const id = item.dataset.habito;
-      if (marcados[id]) delete marcados[id];
-      else marcados[id] = true;
-    });
-  });
-
-  $('#energia').addEventListener('click', evento => {
-    const botao = evento.target.closest('[data-energia]');
-    if (!botao) return;
-    const valor = Number(botao.dataset.energia);
-    atualizar(() => {
-      const r = registroDeHoje();
-      r.energia = r.energia === valor ? 0 : valor;
-    });
-  });
-
-  $('#campo-vitoria').addEventListener('input', evento => {
-    registroDeHoje().vitoria = evento.target.value;
-    persistir();
-  });
-  $('#campo-vitoria').addEventListener('blur', () => atualizar(() => {}));
 
   $('#campo-nome').addEventListener('input', evento => {
     estado.perfil.nome = evento.target.value;
     persistir();
-    renderTopo(estatisticas(estado));
+    renderTopo();
   });
 
   $('#campo-objetivo').addEventListener('input', evento => {
     estado.perfil.objetivo = evento.target.value;
     persistir();
-    const objetivo = evento.target.value.trim();
-    $('#cartao-objetivo').hidden = !objetivo;
-    $('#objetivo-texto').textContent = objetivo;
-  });
-
-  $('#form-habito').addEventListener('submit', evento => {
-    evento.preventDefault();
-    const nome = $('#novo-nome').value.trim();
-    if (!nome) return;
-    atualizar(() => {
-      estado.habitos.push({
-        id: idNovo(),
-        nome,
-        icone: $('#novo-icone').value.trim() || '✅',
-        pontos: Math.min(100, Math.max(1, Number($('#novo-pontos').value) || 10)),
-        ativo: true
-      });
-    });
-    $('#novo-nome').value = '';
-    $('#novo-icone').value = '✅';
-    $('#novo-pontos').value = 10;
-    avisar('Hábito adicionado.');
-  });
-
-  $('#lista-editavel').addEventListener('click', evento => {
-    const botao = evento.target.closest('[data-acao]');
-    if (!botao) return;
-    const id = botao.closest('[data-habito]').dataset.habito;
-    const habito = estado.habitos.find(h => h.id === id);
-    if (!habito) return;
-
-    if (botao.dataset.acao === 'alternar') {
-      atualizar(() => { habito.ativo = !habito.ativo; });
-    } else if (confirm(`Remover "${habito.nome}"? O histórico dele também sai das contas.`)) {
-      atualizar(() => {
-        estado.habitos = estado.habitos.filter(h => h.id !== id);
-        Object.values(estado.registros).forEach(r => { delete r.habitos[id]; });
-      });
-      avisar('Hábito removido.');
-    }
-  });
-
-  $('#sugestoes').addEventListener('click', evento => {
-    const chip = evento.target.closest('[data-sugestao]');
-    if (!chip) return;
-    const sugestao = HABITOS_SUGERIDOS.filter(s => !estado.habitos.some(h => h.nome === s.nome))[Number(chip.dataset.sugestao)];
-    if (!sugestao) return;
-    atualizar(() => {
-      estado.habitos.push({ id: idNovo(), ativo: true, ...sugestao });
-    });
-    avisar('Hábito adicionado.');
+    renderTopo();
   });
 
   $('#botao-exportar').addEventListener('click', () => {
@@ -629,6 +369,7 @@ function ligarEventos() {
       try {
         const importado = importarJSON(leitor.result);
         atualizar(() => { estado = importado; });
+        trocarAba('inicio');
         avisar('Backup importado.');
       } catch (e) {
         avisar('Arquivo inválido.');
@@ -639,29 +380,30 @@ function ligarEventos() {
   });
 
   $('#botao-apagar').addEventListener('click', () => {
-    if (!confirm('Apagar todo o histórico e recomeçar do zero?')) return;
+    if (!confirm('Apagar todas as atividades e recomeçar do zero?')) return;
     apagarTudo();
     atualizar(() => { estado = estadoInicial(); });
+    trocarAba('inicio');
     avisar('Programa reiniciado.');
   });
 
-  ligarEventosAtividades();
-
-  /* Se a aba ficar aberta durante a virada do dia, recarrega o dia atual. */
+  /* Se o app ficar aberto durante a virada do dia, recarrega o dia atual. */
   setInterval(() => {
     const agora = hojeISO();
-    if (agora !== hoje) {
-      hoje = agora;
-      render();
-    }
+    if (agora !== hoje) { hoje = agora; render(); }
   }, 60000);
 }
 
-ligarEventos();
-render();
+function iniciar() {
+  $('#campo-nome').value = estado.perfil.nome || '';
+  $('#campo-objetivo').value = estado.perfil.objetivo || '';
+  ligarEventos();
+  render();
+}
 
-/* Registra o service worker para o programa funcionar sem internet.
-   Só roda em site publicado (https) ou em teste local. */
+iniciar();
+
+/* Registra o service worker para o programa funcionar sem internet. */
 if ('serviceWorker' in navigator &&
     (location.protocol === 'https:' || location.hostname === 'localhost')) {
   window.addEventListener('load', () => {

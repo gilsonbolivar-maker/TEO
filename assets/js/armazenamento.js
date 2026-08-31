@@ -3,7 +3,7 @@
 const CHAVE = 'teo-programa-v1';
 
 function idNovo() {
-  return 'h' + Math.random().toString(36).slice(2, 9);
+  return 'a' + Math.random().toString(36).slice(2, 9);
 }
 
 function hojeISO() {
@@ -18,23 +18,19 @@ function isoParaData(iso) {
   return new Date(a, m - 1, d);
 }
 
-function dataParaISO(data) {
-  const mes = String(data.getMonth() + 1).padStart(2, '0');
-  const dia = String(data.getDate()).padStart(2, '0');
-  return `${data.getFullYear()}-${mes}-${dia}`;
-}
-
 function somarDias(iso, dias) {
   const d = isoParaData(iso);
   d.setDate(d.getDate() + dias);
-  return dataParaISO(d);
+  const mes = String(d.getMonth() + 1).padStart(2, '0');
+  const dia = String(d.getDate()).padStart(2, '0');
+  return `${d.getFullYear()}-${mes}-${dia}`;
 }
 
 function pontosVazios() {
   return Array.from({ length: PONTOS_POR_ATIVIDADE }, () => ({ titulo: '', concluido: false, em: '' }));
 }
 
-/* Sempre devolve exatamente 5 pontos, completando ou cortando o que vier salvo. */
+/* Sempre devolve exatamente 5 pontos, completando o que vier salvo. */
 function normalizarPontos(bruto) {
   const lista = Array.isArray(bruto) ? bruto : [];
   return Array.from({ length: PONTOS_POR_ATIVIDADE }, (_, i) => {
@@ -49,16 +45,9 @@ function normalizarPontos(bruto) {
 
 function estadoInicial() {
   return {
-    versao: 1,
-    perfil: {
-      nome: 'Teo Neto',
-      objetivo: '',
-      inicio: hojeISO()
-    },
-    habitos: HABITOS_PADRAO.map(h => ({ id: idNovo(), ativo: true, ...h })),
-    atividades: [],
-    registros: {},
-    config: { tema: 'escuro' }
+    versao: 2,
+    perfil: { nome: 'Teo Neto', objetivo: '', inicio: hojeISO() },
+    atividades: []
   };
 }
 
@@ -79,47 +68,25 @@ function carregar() {
   }
 }
 
-/* Preenche campos que possam faltar em dados antigos ou importados. */
+/* Preenche o que falta e descarta campos de versões antigas. */
 function normalizar(estado) {
   const base = estadoInicial();
-  const limpo = {
-    versao: 1,
+  return {
+    versao: 2,
     perfil: Object.assign({}, base.perfil, estado.perfil || {}),
-    habitos: Array.isArray(estado.habitos) ? estado.habitos : base.habitos,
-    atividades: Array.isArray(estado.atividades) ? estado.atividades : [],
-    registros: (estado.registros && typeof estado.registros === 'object') ? estado.registros : {},
-    config: Object.assign({}, base.config, estado.config || {})
+    atividades: (Array.isArray(estado.atividades) ? estado.atividades : [])
+      .filter(a => a && typeof a.titulo === 'string')
+      .map(a => ({
+        id: a.id || idNovo(),
+        titulo: a.titulo,
+        icone: a.icone || '📌',
+        nota: typeof a.nota === 'string' ? a.nota : '',
+        concluida: a.concluida === true,
+        criadaEm: a.criadaEm || a.atualizadoEm || hojeISO(),
+        atualizadoEm: a.atualizadoEm || hojeISO(),
+        pontos: normalizarPontos(a.pontos)
+      }))
   };
-  limpo.habitos = limpo.habitos
-    .filter(h => h && typeof h.nome === 'string')
-    .map(h => ({
-      id: h.id || idNovo(),
-      nome: h.nome,
-      icone: h.icone || '✅',
-      pontos: Number(h.pontos) > 0 ? Number(h.pontos) : 10,
-      ativo: h.ativo !== false
-    }));
-  limpo.atividades = limpo.atividades
-    .filter(a => a && typeof a.titulo === 'string')
-    .map(a => ({
-      id: a.id || idNovo(),
-      titulo: a.titulo,
-      icone: a.icone || '📌',
-      nota: typeof a.nota === 'string' ? a.nota : '',
-      concluida: a.concluida === true,
-      atualizadoEm: a.atualizadoEm || hojeISO(),
-      pontos: normalizarPontos(a.pontos)
-    }));
-
-  Object.keys(limpo.registros).forEach(dia => {
-    const r = limpo.registros[dia] || {};
-    limpo.registros[dia] = {
-      habitos: (r.habitos && typeof r.habitos === 'object') ? r.habitos : {},
-      vitoria: typeof r.vitoria === 'string' ? r.vitoria : '',
-      energia: Number(r.energia) || 0
-    };
-  });
-  return limpo;
 }
 
 function salvar(estado) {

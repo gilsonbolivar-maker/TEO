@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Programa Motivacional · Teo Neto</title>
-  <meta name="description" content="Programa motivacional diário: hábitos, sequências, pontos e conquistas.">
+  <meta name="description" content="Acompanhe seu desenvolvimento em atividades específicas: 5 pontos, 20% cada, até fechar o círculo.">
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔥</text></svg>">
 
   <!-- Instalação como aplicativo (PWA) -->
@@ -20,50 +20,23 @@
 </head>
 <body>
   <header class="topo">
-    <div class="topo-identidade">
-      <div class="avatar" id="avatar">T</div>
-      <div>
-        <p class="topo-saudacao" id="saudacao">Bom dia</p>
-        <h1 class="topo-nome" id="nome-usuario">Teo Neto</h1>
-      </div>
-    </div>
-    <div class="topo-metricas">
-      <div class="metrica" title="Dias seguidos de atividade">
-        <span class="metrica-valor" id="metrica-sequencia">0</span>
-        <span class="metrica-rotulo">🔥 sequência</span>
-      </div>
-      <div class="metrica" title="Pontos acumulados">
-        <span class="metrica-valor" id="metrica-pontos">0</span>
-        <span class="metrica-rotulo">⭐ pontos</span>
-      </div>
-      <div class="metrica" title="Nível atual">
-        <span class="metrica-valor" id="metrica-nivel">1</span>
-        <span class="metrica-rotulo" id="metrica-nivel-nome">Semente</span>
-      </div>
+    <div class="avatar" id="avatar">T</div>
+    <div class="topo-textos">
+      <h1 class="topo-nome" id="nome-usuario">Teo Neto</h1>
+      <p class="topo-objetivo" id="topo-objetivo"></p>
     </div>
   </header>
-
-  <div class="barra-nivel" title="Progresso até o próximo nível">
-    <div class="barra-nivel-preenchida" id="barra-nivel"></div>
-    <span class="barra-nivel-texto" id="barra-nivel-texto"></span>
-  </div>
 
   <nav class="abas" id="abas" role="tablist"></nav>
 
   <main>
-    <!-- ABA HOJE -->
-    <section class="painel ativo" id="painel-hoje">
-      <blockquote class="frase">
-        <p id="frase-texto"></p>
-        <cite id="frase-autor"></cite>
-      </blockquote>
+    <!-- INÍCIO: resumo e lista de atividades -->
+    <section class="painel ativo" id="painel-inicio">
+      <div class="resumo" id="resumo"></div>
 
       <article class="cartao">
         <div class="cartao-cabecalho">
-          <div>
-            <h2>Minhas atividades</h2>
-            <p class="legenda">Cada atividade tem 5 pontos — cada ponto fecha 20% do círculo.</p>
-          </div>
+          <h2>Atividades</h2>
           <button class="botao secundario compacto" id="botao-nova-atividade">+ Nova</button>
         </div>
 
@@ -80,123 +53,46 @@
 
         <ul class="lista-atividades" id="lista-atividades"></ul>
         <p class="vazio" id="atividades-vazio">Nenhuma atividade ainda. Toque em <strong>+ Nova</strong> e defina seu objetivo.</p>
-
-      </article>
-
-      <article class="cartao">
-        <h2>Diário rápido</h2>
-        <label class="rotulo" for="campo-vitoria">Qual foi a vitória de hoje?</label>
-        <textarea id="campo-vitoria" rows="3" placeholder="Mesmo pequena. Escreva a vitória do dia."></textarea>
-        <p class="rotulo">Como estava a energia?</p>
-        <div class="energia" id="energia"></div>
-      </article>
-
-      <article class="cartao" id="cartao-objetivo" hidden>
-        <h2>Objetivo do programa</h2>
-        <p class="objetivo-texto" id="objetivo-texto"></p>
       </article>
     </section>
 
     <!-- ABA DE UMA ATIVIDADE (montada pelo JS) -->
     <section class="painel" id="painel-atividade"></section>
 
-    <!-- ABA HÁBITOS -->
-    <section class="painel" id="painel-habitos">
-      <article class="cartao">
-        <div class="cartao-cabecalho">
-          <div>
-            <h2>Hábitos de hoje</h2>
-            <p class="legenda" id="data-hoje"></p>
-          </div>
-          <div class="anel" id="anel-progresso">
-            <span id="anel-texto">0%</span>
-          </div>
-        </div>
-        <ul class="lista-habitos" id="lista-habitos"></ul>
-        <p class="vazio" id="habitos-vazio" hidden>
-          Nenhum hábito ativo. Vá em <strong>Ajustes</strong> e adicione o primeiro.
-        </p>
-        <p class="rodape-cartao" id="resumo-dia"></p>
-      </article>
-
-    </section>
-
-    <!-- ABA PROGRESSO -->
+    <!-- PROGRESSO -->
     <section class="painel" id="painel-progresso">
-      <div class="grade-stats" id="grade-stats"></div>
-
       <article class="cartao">
-        <h2>Últimas 12 semanas</h2>
-        <p class="legenda">Cada quadradinho é um dia. Quanto mais forte a cor, mais hábitos cumpridos.</p>
-        <div class="mapa-scroll">
-          <div class="mapa" id="mapa-calor"></div>
-        </div>
-        <div class="legenda-mapa">
-          <span>menos</span>
-          <i class="celula n0"></i><i class="celula n1"></i><i class="celula n2"></i><i class="celula n3"></i><i class="celula n4"></i>
-          <span>mais</span>
-        </div>
+        <h2>Andamento</h2>
+        <div id="andamento"></div>
       </article>
 
       <article class="cartao">
-        <h2>Desempenho por hábito</h2>
-        <p class="legenda">Percentual de dias cumpridos nos últimos 30 dias.</p>
-        <div id="desempenho-habitos"></div>
-      </article>
-
-      <article class="cartao">
-        <h2>Revisão da semana</h2>
-        <div id="revisao-semana"></div>
+        <h2>Avanços recentes</h2>
+        <p class="legenda">Cada ponto concluído, com a data.</p>
+        <ul class="historico" id="historico"></ul>
+        <p class="vazio" id="historico-vazio">Nenhum ponto concluído ainda.</p>
       </article>
     </section>
 
-    <!-- ABA CONQUISTAS -->
-    <section class="painel" id="painel-conquistas">
-      <article class="cartao">
-        <h2>Medalhas</h2>
-        <p class="legenda" id="conquistas-contador"></p>
-        <div class="grade-conquistas" id="grade-conquistas"></div>
-      </article>
-    </section>
-
-    <!-- ABA AJUSTES -->
+    <!-- AJUSTES -->
     <section class="painel" id="painel-ajustes">
       <article class="cartao">
         <h2>Perfil</h2>
         <label class="rotulo" for="campo-nome">Nome</label>
         <input id="campo-nome" type="text" maxlength="40" placeholder="Teo Neto">
-        <label class="rotulo" for="campo-objetivo">Objetivo do programa</label>
-        <textarea id="campo-objetivo" rows="2" placeholder="Ex.: terminar o semestre com nota alta e correr 5 km sem parar."></textarea>
-      </article>
-
-      <article class="cartao">
-        <h2>Hábitos</h2>
-        <p class="legenda">Desative o que não faz mais sentido; o histórico é preservado.</p>
-        <ul class="lista-editavel" id="lista-editavel"></ul>
-
-        <form class="form-habito" id="form-habito">
-          <input id="novo-icone" type="text" maxlength="2" value="✅" aria-label="Ícone" class="campo-icone">
-          <input id="novo-nome" type="text" maxlength="60" placeholder="Novo hábito" required>
-          <input id="novo-pontos" type="number" min="1" max="100" value="10" aria-label="Pontos" class="campo-pontos">
-          <button type="submit" class="botao">Adicionar</button>
-        </form>
-
-        <details class="sugestoes">
-          <summary>Sugestões prontas</summary>
-          <div id="sugestoes" class="chips"></div>
-        </details>
+        <label class="rotulo" for="campo-objetivo">Objetivo geral</label>
+        <input id="campo-objetivo" type="text" maxlength="90" placeholder="O que você quer alcançar neste período">
       </article>
 
       <article class="cartao">
         <h2>Lembrete diário</h2>
-        <p class="legenda">O programa não envia notificação sozinho. Para ser cutucado todo dia no mesmo horário, crie uma automação no app <strong>Atalhos</strong> (iPhone/iPad):</p>
+        <p class="legenda">O programa não envia notificação sozinho. Para ser lembrado todo dia no mesmo horário, crie uma automação no app <strong>Atalhos</strong>:</p>
         <ol class="passos">
-          <li>Abra <strong>Atalhos</strong> → aba <strong>Automação</strong> → <strong>+</strong></li>
-          <li>Escolha <strong>Hora do Dia</strong> e defina o horário (ex.: 21h)</li>
-          <li>Repetir: <strong>Diariamente</strong> · Executar: <strong>Imediatamente</strong></li>
-          <li>Ação: <strong>Abrir app</strong> → selecione <strong>Teo</strong></li>
+          <li><strong>Atalhos</strong> → aba <strong>Automação</strong> → <strong>+</strong></li>
+          <li><strong>Hora do Dia</strong> e o horário</li>
+          <li>Repetir <strong>Diariamente</strong> · Executar <strong>Imediatamente</strong></li>
+          <li>Ação <strong>Abrir app</strong> → <strong>Teo</strong></li>
         </ol>
-        <p class="legenda">No Android, use um lembrete diário no Google Agenda apontando para o site.</p>
       </article>
 
       <article class="cartao">
@@ -213,7 +109,7 @@
   </main>
 
   <footer class="rodape">
-    <p>Programa Motivacional Teo Neto · um dia de cada vez.</p>
+    <p id="frase-rodape"></p>
   </footer>
 
   <div class="aviso" id="aviso" hidden></div>

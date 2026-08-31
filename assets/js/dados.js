@@ -1,4 +1,4 @@
-/* Dados estáticos do programa: frases, hábitos sugeridos, níveis e conquistas. */
+/* Dados estáticos do programa. */
 
 const FRASES = [
   { texto: 'Disciplina é escolher entre o que você quer agora e o que você quer mais.', autor: 'Abraham Lincoln' },
@@ -43,58 +43,6 @@ const FRASES = [
   { texto: 'Quem quer, arruma um jeito. Quem não quer, arruma uma desculpa.', autor: 'Provérbio popular' },
   { texto: 'Grandes resultados exigem grandes ambições.', autor: 'Heráclito' },
   { texto: 'Trabalhe enquanto eles dormem. Aprenda enquanto eles se distraem.', autor: 'Anônimo' }
-];
-
-const HABITOS_SUGERIDOS = [
-  { nome: 'Acordar no horário', icone: '⏰', pontos: 10 },
-  { nome: 'Beber 2L de água', icone: '💧', pontos: 10 },
-  { nome: 'Exercício físico (30 min)', icone: '🏃', pontos: 15 },
-  { nome: 'Leitura (20 min)', icone: '📚', pontos: 10 },
-  { nome: 'Estudo focado (1h)', icone: '🎯', pontos: 20 },
-  { nome: 'Arrumar o quarto', icone: '🛏️', pontos: 5 },
-  { nome: 'Sem redes sociais até o meio-dia', icone: '📵', pontos: 15 },
-  { nome: 'Alimentação limpa', icone: '🥗', pontos: 10 },
-  { nome: 'Dormir antes das 23h', icone: '🌙', pontos: 15 },
-  { nome: 'Planejar o dia seguinte', icone: '🗒️', pontos: 10 }
-];
-
-const HABITOS_PADRAO = [
-  { nome: 'Exercício físico (30 min)', icone: '🏃', pontos: 15 },
-  { nome: 'Estudo focado (1h)', icone: '🎯', pontos: 20 },
-  { nome: 'Leitura (20 min)', icone: '📚', pontos: 10 },
-  { nome: 'Beber 2L de água', icone: '💧', pontos: 10 },
-  { nome: 'Dormir antes das 23h', icone: '🌙', pontos: 15 }
-];
-
-const NIVEIS = [
-  { nivel: 1,  nome: 'Semente',     minimo: 0 },
-  { nivel: 2,  nome: 'Broto',       minimo: 100 },
-  { nivel: 3,  nome: 'Raiz Firme',  minimo: 250 },
-  { nivel: 4,  nome: 'No Ritmo',    minimo: 500 },
-  { nivel: 5,  nome: 'Constância',  minimo: 900 },
-  { nivel: 6,  nome: 'Disciplina',  minimo: 1400 },
-  { nivel: 7,  nome: 'Força',       minimo: 2000 },
-  { nivel: 8,  nome: 'Imparável',   minimo: 3000 },
-  { nivel: 9,  nome: 'Lenda',       minimo: 4500 },
-  { nivel: 10, nome: 'Mestre',      minimo: 6500 }
-];
-
-/* Cada conquista recebe as estatísticas calculadas e devolve true quando desbloqueada. */
-const CONQUISTAS = [
-  { id: 'primeiro-passo', icone: '👣', nome: 'Primeiro Passo',   desc: 'Marcar o primeiro hábito do programa.', teste: e => e.totalMarcacoes >= 1 },
-  { id: 'dia-perfeito',   icone: '💯', nome: 'Dia Perfeito',     desc: 'Completar todos os hábitos em um dia.', teste: e => e.diasPerfeitos >= 1 },
-  { id: 'trio',           icone: '🔥', nome: 'Pegando Fogo',     desc: 'Manter 3 dias seguidos de atividade.', teste: e => e.melhorSequencia >= 3 },
-  { id: 'semana',         icone: '🗓️', nome: 'Semana Cheia',     desc: 'Manter 7 dias seguidos de atividade.', teste: e => e.melhorSequencia >= 7 },
-  { id: 'quinzena',       icone: '⚡', nome: 'Duas Semanas',     desc: 'Manter 14 dias seguidos de atividade.', teste: e => e.melhorSequencia >= 14 },
-  { id: 'mes',            icone: '🏆', nome: 'Um Mês Inteiro',   desc: 'Manter 30 dias seguidos de atividade.', teste: e => e.melhorSequencia >= 30 },
-  { id: 'centuriao',      icone: '👑', nome: 'Centurião',        desc: 'Manter 100 dias seguidos de atividade.', teste: e => e.melhorSequencia >= 100 },
-  { id: 'perfeitos-10',   icone: '💎', nome: 'Dez Sem Falhar',   desc: 'Acumular 10 dias perfeitos.', teste: e => e.diasPerfeitos >= 10 },
-  { id: 'pontos-500',     icone: '⭐', nome: '500 Pontos',       desc: 'Acumular 500 pontos no programa.', teste: e => e.pontos >= 500 },
-  { id: 'pontos-2000',    icone: '🌟', nome: '2000 Pontos',      desc: 'Acumular 2000 pontos no programa.', teste: e => e.pontos >= 2000 },
-  { id: 'diario',         icone: '✍️', nome: 'Memória Viva',     desc: 'Registrar 10 vitórias no diário.', teste: e => e.vitoriasRegistradas >= 10 },
-  { id: 'retorno',        icone: '🔄', nome: 'Voltei Mais Forte', desc: 'Voltar a marcar hábitos depois de falhar um dia.', teste: e => e.retomadas >= 1 },
-  { id: 'terminei',       icone: '🏁', nome: 'Terminei',          desc: 'Concluir uma atividade do quadro "continuar".', teste: e => e.atividadesConcluidas >= 1 },
-  { id: 'maratonista',    icone: '📕', nome: 'Maratonista',       desc: 'Concluir 5 atividades do quadro "continuar".', teste: e => e.atividadesConcluidas >= 5 }
 ];
 
 /* Cada atividade se divide em 5 pontos; cada ponto vale 20% do círculo. */
