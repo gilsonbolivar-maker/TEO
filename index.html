@@ -48,12 +48,7 @@
     <span class="barra-nivel-texto" id="barra-nivel-texto"></span>
   </div>
 
-  <nav class="abas" role="tablist">
-    <button class="aba ativa" data-aba="hoje" role="tab">Hoje</button>
-    <button class="aba" data-aba="progresso" role="tab">Progresso</button>
-    <button class="aba" data-aba="conquistas" role="tab">Conquistas</button>
-    <button class="aba" data-aba="ajustes" role="tab">Ajustes</button>
-  </nav>
+  <nav class="abas" id="abas" role="tablist"></nav>
 
   <main>
     <!-- ABA HOJE -->
@@ -62,23 +57,6 @@
         <p id="frase-texto"></p>
         <cite id="frase-autor"></cite>
       </blockquote>
-
-      <article class="cartao">
-        <div class="cartao-cabecalho">
-          <div>
-            <h2>Hábitos de hoje</h2>
-            <p class="legenda" id="data-hoje"></p>
-          </div>
-          <div class="anel" id="anel-progresso">
-            <span id="anel-texto">0%</span>
-          </div>
-        </div>
-        <ul class="lista-habitos" id="lista-habitos"></ul>
-        <p class="vazio" id="habitos-vazio" hidden>
-          Nenhum hábito ativo. Vá em <strong>Ajustes</strong> e adicione o primeiro.
-        </p>
-        <p class="rodape-cartao" id="resumo-dia"></p>
-      </article>
 
       <article class="cartao">
         <div class="cartao-cabecalho">
@@ -103,10 +81,6 @@
         <ul class="lista-atividades" id="lista-atividades"></ul>
         <p class="vazio" id="atividades-vazio">Nenhuma atividade ainda. Toque em <strong>+ Nova</strong> e defina seu objetivo.</p>
 
-        <details class="concluidas" id="bloco-concluidas" hidden>
-          <summary id="resumo-concluidas"></summary>
-          <ul class="lista-atividades concluidas-lista" id="lista-concluidas"></ul>
-        </details>
       </article>
 
       <article class="cartao">
@@ -121,6 +95,30 @@
         <h2>Objetivo do programa</h2>
         <p class="objetivo-texto" id="objetivo-texto"></p>
       </article>
+    </section>
+
+    <!-- ABA DE UMA ATIVIDADE (montada pelo JS) -->
+    <section class="painel" id="painel-atividade"></section>
+
+    <!-- ABA HÁBITOS -->
+    <section class="painel" id="painel-habitos">
+      <article class="cartao">
+        <div class="cartao-cabecalho">
+          <div>
+            <h2>Hábitos de hoje</h2>
+            <p class="legenda" id="data-hoje"></p>
+          </div>
+          <div class="anel" id="anel-progresso">
+            <span id="anel-texto">0%</span>
+          </div>
+        </div>
+        <ul class="lista-habitos" id="lista-habitos"></ul>
+        <p class="vazio" id="habitos-vazio" hidden>
+          Nenhum hábito ativo. Vá em <strong>Ajustes</strong> e adicione o primeiro.
+        </p>
+        <p class="rodape-cartao" id="resumo-dia"></p>
+      </article>
+
     </section>
 
     <!-- ABA PROGRESSO -->

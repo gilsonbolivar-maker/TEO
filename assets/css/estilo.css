@@ -114,6 +114,7 @@ h2 { font-size: 1.05rem; letter-spacing: .2px; }
 .abas {
   display: flex;
   gap: 6px;
+  scrollbar-width: thin;
   background: var(--cartao);
   border: 1px solid var(--borda);
   border-radius: 999px;
@@ -123,7 +124,7 @@ h2 { font-size: 1.05rem; letter-spacing: .2px; }
 }
 
 .aba {
-  flex: 1;
+  flex: 0 0 auto;
   border: 0;
   background: transparent;
   color: var(--texto-suave);
@@ -514,12 +515,6 @@ input:focus, textarea:focus { outline: 2px solid var(--acento); outline-offset: 
 
 .atividade-pct { font-size: .95rem; font-weight: 700; color: var(--acento); flex-shrink: 0; min-width: 44px; text-align: right; }
 
-.atividade-detalhe { padding: 0 14px 14px; border-top: 1px solid var(--borda); }
-
-.detalhe-topo { display: flex; align-items: center; gap: 16px; padding-top: 14px; }
-.detalhe-lado { flex: 1; min-width: 0; }
-.detalhe-parado { margin: 0 0 6px; font-size: .78rem; color: var(--texto-suave); }
-
 /* Círculo de 5 fatias. */
 .circulo { width: 118px; height: 118px; flex-shrink: 0; }
 .circulo .fatia { stroke: var(--borda); transition: stroke .35s ease; }
@@ -571,11 +566,22 @@ input:focus, textarea:focus { outline: 2px solid var(--acento); outline-offset: 
 .atividade.fechada .atividade-titulo { text-decoration: line-through; color: var(--texto-suave); }
 .atividade.fechada .regua > span { background: var(--sucesso); }
 
-.concluidas { margin-top: 14px; }
-.concluidas summary { cursor: pointer; font-size: .82rem; color: var(--texto-suave); }
-.concluidas-lista { margin-top: 10px; }
 
-@media (max-width: 400px) {
-  .detalhe-topo { flex-direction: column; align-items: stretch; gap: 10px; }
-  .circulo { align-self: center; }
-}
+/* ---------- Aba exclusiva de cada atividade ---------- */
+
+.aba-atividade { max-width: 168px; overflow: hidden; text-overflow: ellipsis; }
+
+.cartao-atividade { padding-top: 20px; }
+
+.atividade-titulo-grande { display: flex; align-items: center; gap: 10px; }
+.atividade-titulo-grande h2 { font-size: 1.12rem; }
+.atividade-titulo-grande .atividade-icone { font-size: 1.6rem; }
+
+.detalhe-parado { margin: 6px 0 0; font-size: .78rem; color: var(--texto-suave); }
+
+.cartao-atividade .circulo { width: 200px; height: 200px; display: block; margin: 18px auto 22px; }
+.cartao-atividade .circulo-pct { font-size: 19px; }
+.cartao-atividade .circulo-frac { font-size: 8px; }
+
+.titulo-pontos { margin-top: 20px; }
+.cartao-atividade .lista-pontos { margin-top: 10px; }

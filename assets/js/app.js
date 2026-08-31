@@ -69,6 +69,21 @@ function renderHoje() {
   const frase = fraseDoDia(hoje);
   $('#frase-texto').textContent = '“' + frase.texto + '”';
   $('#frase-autor').textContent = '— ' + frase.autor;
+
+  const campoVitoria = $('#campo-vitoria');
+  if (document.activeElement !== campoVitoria) campoVitoria.value = registroDeHoje().vitoria;
+
+  const energia = registroDeHoje().energia;
+  $('#energia').innerHTML = ['😴', '🙁', '😐', '🙂', '🤩']
+    .map((emoji, i) => `<button type="button" data-energia="${i + 1}" class="${energia === i + 1 ? 'ativa' : ''}" title="Energia ${i + 1} de 5">${emoji}</button>`)
+    .join('');
+
+  const objetivo = (estado.perfil.objetivo || '').trim();
+  $('#cartao-objetivo').hidden = !objetivo;
+  $('#objetivo-texto').textContent = objetivo;
+}
+
+function renderHabitos() {
   $('#data-hoje').textContent = dataPorExtenso(hoje);
 
   const ativos = habitosAtivos(estado);
@@ -96,18 +111,6 @@ function renderHoje() {
   if (ativos.length && feitos === ativos.length) resumo += ' · dia perfeito! 💯 (+' + BONUS_DIA_PERFEITO + ' de bônus)';
   else if (feitos === 0) resumo += ' · comece pelo mais fácil.';
   $('#resumo-dia').textContent = resumo;
-
-  const campoVitoria = $('#campo-vitoria');
-  if (document.activeElement !== campoVitoria) campoVitoria.value = registroDeHoje().vitoria;
-
-  const energia = registroDeHoje().energia;
-  $('#energia').innerHTML = ['😴', '🙁', '😐', '🙂', '🤩']
-    .map((emoji, i) => `<button type="button" data-energia="${i + 1}" class="${energia === i + 1 ? 'ativa' : ''}" title="Energia ${i + 1} de 5">${emoji}</button>`)
-    .join('');
-
-  const objetivo = (estado.perfil.objetivo || '').trim();
-  $('#cartao-objetivo').hidden = !objetivo;
-  $('#objetivo-texto').textContent = objetivo;
 }
 
 function renderProgresso(stats) {
@@ -227,8 +230,6 @@ function renderAjustes() {
 
 /* ---------- Quadro de atividades: 5 pontos, cada um vale 20% ---------- */
 
-const atividadesAbertas = new Set();
-
 function pontosConcluidos(atividade) {
   return atividade.pontos.filter(p => p.concluido).length;
 }
@@ -287,13 +288,11 @@ function listaDePontos(atividade) {
     </li>`).join('');
 }
 
-function cartaoAtividade(a, concluida) {
+function cartaoAtividade(a) {
   const pct = percentualAtividade(a);
-  const aberta = atividadesAbertas.has(a.id);
-  const dias = diasParado(a);
   return `
-    <li class="atividade ${concluida ? 'fechada' : ''}" data-atividade="${a.id}">
-      <button class="atividade-cabecalho" data-acao="abrir" aria-expanded="${aberta}">
+    <li class="atividade ${a.concluida ? 'fechada' : ''}" data-atividade="${a.id}">
+      <button class="atividade-cabecalho" data-acao="abrir">
         <span class="atividade-icone">${escapar(a.icone)}</span>
         <span class="atividade-info">
           <span class="atividade-titulo">${escapar(a.titulo)}</span>
@@ -301,44 +300,51 @@ function cartaoAtividade(a, concluida) {
         </span>
         <span class="atividade-pct">${pct}%</span>
       </button>
-
-      <div class="atividade-detalhe" ${aberta ? '' : 'hidden'}>
-        <div class="detalhe-topo">
-          ${circuloDePontos(a)}
-          <div class="detalhe-lado">
-            <p class="detalhe-parado">${concluida ? 'Objetivo concluído 🏁' : textoParado(dias)}</p>
-            <label class="rotulo">Onde parei</label>
-            <input class="atividade-nota-campo" type="text" maxlength="90"
-                   value="${escapar(a.nota)}" placeholder="Ex.: capítulo 7, página 120"
-                   aria-label="Onde parei">
-          </div>
-        </div>
-
-        <p class="legenda">Os 5 pontos até concluir — cada um fecha ${PESO_DO_PONTO}% do círculo.</p>
-        <ul class="lista-pontos">${listaDePontos(a)}</ul>
-
-        <div class="atividade-acoes">
-          ${concluida ? '<button data-acao="reabrir">Reabrir</button>' : ''}
-          <button data-acao="remover">Remover</button>
-        </div>
-      </div>
     </li>`;
 }
 
 function renderAtividades() {
-  const todas = estado.atividades || [];
-  const abertas = todas.filter(a => !a.concluida);
-  const feitas = todas.filter(a => a.concluida);
+  const todas = (estado.atividades || []).slice();
 
-  /* Mais avançadas primeiro; empatadas, as paradas há mais tempo sobem. */
-  abertas.sort((a, b) => percentualAtividade(b) - percentualAtividade(a) || diasParado(b) - diasParado(a));
+  /* Em andamento primeiro, das mais avançadas para as menos; concluídas no fim. */
+  todas.sort((a, b) =>
+    Number(a.concluida) - Number(b.concluida) ||
+    percentualAtividade(b) - percentualAtividade(a) ||
+    diasParado(b) - diasParado(a));
 
-  $('#lista-atividades').innerHTML = abertas.map(a => cartaoAtividade(a, false)).join('');
-  $('#atividades-vazio').hidden = abertas.length > 0;
+  $('#lista-atividades').innerHTML = todas.map(cartaoAtividade).join('');
+  $('#atividades-vazio').hidden = todas.length > 0;
+}
 
-  $('#bloco-concluidas').hidden = feitas.length === 0;
-  $('#resumo-concluidas').textContent = `Concluídas (${feitas.length})`;
-  $('#lista-concluidas').innerHTML = feitas.map(a => cartaoAtividade(a, true)).join('');
+/* A aba exclusiva da atividade: círculo grande, onde parei e os 5 pontos. */
+function renderPainelAtividade() {
+  const a = atividadeDaAba();
+  if (!a) { trocarAba('hoje'); return; }
+  const dias = diasParado(a);
+
+  $('#painel-atividade').innerHTML = `
+    <article class="cartao cartao-atividade">
+      <div class="atividade-titulo-grande">
+        <span class="atividade-icone">${escapar(a.icone)}</span>
+        <h2>${escapar(a.titulo)}</h2>
+      </div>
+      <p class="detalhe-parado">${a.concluida ? 'Objetivo concluído 🏁' : textoParado(dias)}</p>
+
+      ${circuloDePontos(a)}
+
+      <label class="rotulo">Onde parei</label>
+      <input class="atividade-nota-campo" type="text" maxlength="90"
+             value="${escapar(a.nota)}" placeholder="Ex.: capítulo 7, página 120" aria-label="Onde parei">
+
+      <p class="legenda titulo-pontos">Os 5 pontos até concluir — cada um fecha ${PESO_DO_PONTO}% do círculo.</p>
+      <ul class="lista-pontos">${listaDePontos(a)}</ul>
+
+      <div class="atividade-acoes">
+        ${a.concluida ? '<button data-acao="reabrir">Reabrir</button>' : ''}
+        <button data-acao="remover">Remover atividade</button>
+      </div>
+    </article>`;
+  $('#painel-atividade').dataset.atividade = a.id;
 }
 
 function ligarEventosAtividades() {
@@ -367,10 +373,9 @@ function ligarEventosAtividades() {
       pontos: pontosVazios()
     };
     atualizar(() => { estado.atividades.push(novo); });
-    atividadesAbertas.add(novo.id);
-    renderAtividades();
     $('#form-atividade').hidden = true;
     $('#form-atividade').reset();
+    trocarAba('atv:' + novo.id);
     avisar('Atividade criada. Defina os 5 pontos.');
   });
 
@@ -384,16 +389,14 @@ function ligarEventosAtividades() {
     if (evento.target.classList.contains('ponto-titulo')) {
       atividade.pontos[Number(evento.target.dataset.indice)].titulo = evento.target.value;
       persistir();
+      /* Ponto sem nome não pode ser concluído: libera o botão assim que ganha um. */
+      const marca = evento.target.closest('.ponto').querySelector('.ponto-marca');
+      if (marca) marca.disabled = evento.target.value.trim() === '';
     } else if (evento.target.classList.contains('atividade-nota-campo')) {
       atividade.nota = evento.target.value;
       atividade.atualizadoEm = hoje;
       persistir();
     }
-  });
-
-  /* Ao sair do campo, redesenha para liberar o botão de concluir do ponto nomeado. */
-  document.addEventListener('change', evento => {
-    if (evento.target.closest('.ponto-titulo, .atividade-nota-campo')) renderAtividades();
   });
 
   document.addEventListener('click', evento => {
@@ -407,9 +410,7 @@ function ligarEventosAtividades() {
     const acao = gatilho.dataset.acao;
 
     if (acao === 'abrir') {
-      if (atividadesAbertas.has(id)) atividadesAbertas.delete(id);
-      else atividadesAbertas.add(id);
-      renderAtividades();
+      trocarAba('atv:' + id);
 
     } else if (acao === 'alternar-ponto') {
       const ponto = atividade.pontos[Number(gatilho.dataset.indice)];
@@ -420,14 +421,17 @@ function ligarEventosAtividades() {
         /* O círculo fechou: a atividade se conclui sozinha. */
         atividade.concluida = pontosConcluidos(atividade) === PONTOS_POR_ATIVIDADE;
       });
+      renderPainelAtividade();
       if (atividade.concluida) avisar('🏁 Círculo fechado! Objetivo concluído.');
       else if (ponto.concluido) avisar(`+${PESO_DO_PONTO}% · ${percentualAtividade(atividade)}% do círculo`);
 
     } else if (acao === 'reabrir') {
       atualizar(() => { atividade.concluida = false; atividade.atualizadoEm = hoje; });
+      renderPainelAtividade();
 
     } else if (acao === 'remover' && confirm(`Remover "${atividade.titulo}"?`)) {
       atualizar(() => { estado.atividades = estado.atividades.filter(a => a.id !== id); });
+      trocarAba('hoje');
       avisar('Atividade removida.');
     }
   });
@@ -436,8 +440,11 @@ function ligarEventosAtividades() {
 function render() {
   const stats = estatisticas(estado);
   renderTopo(stats);
+  renderAbas();
   renderHoje();
+  renderHabitos();
   renderAtividades();
+  if (abaAtual.startsWith('atv:')) renderPainelAtividade();
   renderProgresso(stats);
   renderConquistas(stats);
   renderAjustes();
@@ -463,15 +470,53 @@ function atualizar(mudanca) {
 
 /* ---------- Eventos ---------- */
 
+const ABAS_FINAIS = [
+  { id: 'habitos', rotulo: 'Hábitos' },
+  { id: 'progresso', rotulo: 'Progresso' },
+  { id: 'conquistas', rotulo: 'Conquistas' },
+  { id: 'ajustes', rotulo: 'Ajustes' }
+];
+
+let abaAtual = 'hoje';
+
+/* A navegação tem uma aba por atividade: cada círculo ganha sua própria tela. */
+function renderAbas() {
+  const atividades = (estado.atividades || []).map(a => ({
+    id: 'atv:' + a.id,
+    rotulo: `${a.icone} ${a.titulo}`,
+    concluida: a.concluida
+  }));
+
+  const todas = [{ id: 'hoje', rotulo: 'Hoje' }, ...atividades, ...ABAS_FINAIS];
+
+  $('#abas').innerHTML = todas.map(aba => `
+    <button class="aba ${aba.id === abaAtual ? 'ativa' : ''} ${aba.id.startsWith('atv:') ? 'aba-atividade' : ''}"
+            data-aba="${escapar(aba.id)}" role="tab">${escapar(aba.rotulo)}${aba.concluida ? ' ✓' : ''}</button>
+  `).join('');
+}
+
+function atividadeDaAba() {
+  if (!abaAtual.startsWith('atv:')) return null;
+  return (estado.atividades || []).find(a => a.id === abaAtual.slice(4)) || null;
+}
+
 function trocarAba(nome) {
-  $$('.aba').forEach(b => b.classList.toggle('ativa', b.dataset.aba === nome));
-  $$('.painel').forEach(p => p.classList.toggle('ativo', p.id === 'painel-' + nome));
+  /* Se a atividade da aba sumiu (removida), volta para o começo. */
+  if (nome.startsWith('atv:') && !(estado.atividades || []).some(a => 'atv:' + a.id === nome)) nome = 'hoje';
+  abaAtual = nome;
+  const alvo = nome.startsWith('atv:') ? 'painel-atividade' : 'painel-' + nome;
+  $$('.painel').forEach(p => p.classList.toggle('ativo', p.id === alvo));
+  renderAbas();
+  if (nome.startsWith('atv:')) renderPainelAtividade();
+  const aberta = $('#abas .aba.ativa');
+  if (aberta) aberta.scrollIntoView({ block: 'nearest', inline: 'center', behavior: 'smooth' });
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
 function ligarEventos() {
-  $$('.aba').forEach(botao => {
-    botao.addEventListener('click', () => trocarAba(botao.dataset.aba));
+  $('#abas').addEventListener('click', evento => {
+    const botao = evento.target.closest('.aba');
+    if (botao) trocarAba(botao.dataset.aba);
   });
 
   $('#lista-habitos').addEventListener('click', evento => {

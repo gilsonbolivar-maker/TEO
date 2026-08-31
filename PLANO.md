@@ -104,7 +104,7 @@ Hábito é o que se repete todo dia. **Atividade** é um objetivo específico qu
 
 Cada atividade é dividida em **5 pontos**, definidos por quem faz. Cada ponto vale **20%** e acende uma fatia do círculo. Quando os cinco acendem, o círculo fecha e o objetivo está concluído.
 
-Na página inicial a lista mostra o nome de cada atividade com uma **régua de progresso** embaixo — dá para ver em um segundo o quanto já andou em cada frente. Tocando na atividade, abre o círculo, a anotação de onde parou e os cinco pontos.
+Na página inicial a lista mostra o nome de cada atividade com uma **régua de progresso** embaixo — dá para ver em um segundo o quanto já andou em cada frente. Cada atividade tem ainda **sua própria aba**, com o círculo grande, a anotação de onde parou e os cinco pontos.
 
 **Como dividir bem os 5 pontos:**
 
