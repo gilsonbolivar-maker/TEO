@@ -70,6 +70,29 @@ https://gilsonbolivar-maker.github.io/TEO/
 
 A partir daí, todo `git push` na branch publicada atualiza o site sozinho. O arquivo `.nojekyll` na raiz evita que o GitHub tente processar o projeto como um site Jekyll.
 
+## Instalar como aplicativo (PWA)
+
+O programa é um Progressive Web App: instala na tela de início e **funciona sem internet**.
+
+**iPhone / iPad:** abra o site no Safari → botão de compartilhar → **Adicionar à Tela de Início**.
+**Android:** Chrome → menu `⋮` → **Instalar aplicativo**.
+**Computador:** ícone de instalar na barra de endereço do Chrome ou Edge.
+
+Depois de instalado, o app abre em tela cheia, com ícone próprio, sem barra de navegador, e carrega mesmo em modo avião — o `sw.js` guarda os arquivos no aparelho.
+
+> Ao alterar arquivos do app, suba a versão em `sw.js` (`const VERSAO = 'teo-v1'`) para os aparelhos já instalados receberem a atualização.
+
+### Lembrete diário
+
+O app **não envia notificação sozinho** — push de verdade exigiria um servidor. A forma que funciona hoje, sem custo:
+
+1. Abra **Atalhos** → aba **Automação** → **+**
+2. **Hora do Dia** → escolha o horário
+3. Repetir **Diariamente**, executar **Imediatamente**
+4. Ação **Abrir app** → **Teo**
+
+As mesmas instruções estão dentro do app, na aba Ajustes.
+
 ## Dados e privacidade
 
 Tudo é salvo no `localStorage` **do navegador que você usa** — nada sai do aparelho, não há servidor nem conta. Consequências práticas:
@@ -82,6 +105,9 @@ Tudo é salvo no `localStorage` **do navegador que você usa** — nada sai do a
 
 ```
 index.html                  estrutura da página
+manifest.json               identidade do app instalado (nome, ícones, cores)
+sw.js                       service worker: guarda o app para uso sem internet
+assets/img/                 ícones do aplicativo
 servidor.js                 servidor estático opcional (só para Render Web Service)
 package.json                define o comando `npm start`
 assets/css/estilo.css       estilos (tema escuro, com versão clara automática)

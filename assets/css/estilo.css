@@ -455,3 +455,6 @@ input:focus, textarea:focus { outline: 2px solid var(--acento); outline-offset: 
   .topo-metricas { width: 100%; }
   .metrica { flex: 1; min-width: 0; }
 }
+
+.passos { margin: 12px 0 10px; padding-left: 20px; font-size: .88rem; display: grid; gap: 6px; }
+.passos li { padding-left: 2px; }

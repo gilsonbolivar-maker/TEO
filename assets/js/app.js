@@ -403,3 +403,13 @@ function ligarEventos() {
 
 ligarEventos();
 render();
+
+/* Registra o service worker para o programa funcionar sem internet.
+   Só roda em site publicado (https) ou em teste local. */
+if ('serviceWorker' in navigator &&
+    (location.protocol === 'https:' || location.hostname === 'localhost')) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('sw.js')
+      .catch(erro => console.warn('Service worker não registrado:', erro));
+  });
+}

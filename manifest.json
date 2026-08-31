@@ -1,0 +1,19 @@
+{
+  "name": "Programa Motivacional Teo Neto",
+  "short_name": "Teo",
+  "description": "Hábitos diários, sequência, pontos e conquistas — um dia de cada vez.",
+  "lang": "pt-BR",
+  "dir": "ltr",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0e1116",
+  "theme_color": "#0e1116",
+  "categories": ["lifestyle", "health", "productivity"],
+  "icons": [
+    { "src": "assets/img/icone-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "assets/img/icone-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "assets/img/icone-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
