@@ -18,10 +18,11 @@ No celular, adicione a página à tela inicial para abrir como um app.
 
 O programa acompanha o desenvolvimento em **atividades específicas**. Cada atividade se divide em **5 pontos definidos por quem faz**, valendo **20%** cada. Concluir um ponto acende uma fatia do círculo; quando as cinco acendem, o círculo fecha e a atividade é concluída sozinha.
 
-- **Início** — o resumo em números (em andamento, concluídas, pontos concluídos, média geral) e a lista de atividades, cada uma com a **régua de progresso**, os pontos vencidos e há quanto tempo não avança.
+- **Início** — o resumo em números (em andamento, concluídas, pontos concluídos, média geral) e a lista de atividades, cada uma com a **régua de progresso**, os pontos vencidos, há quanto tempo não avança e **qual é o próximo passo**.
 - **Uma aba por atividade** — círculo grande, anotação de onde parou e os cinco pontos. A barra de abas rola quando há muitas.
 - **Progresso** — o andamento de todas as atividades lado a lado e o histórico de avanços com a data de cada ponto concluído.
 - **Recompensas** — cada ponto concluído dá direito a escolher uma recompensa da lista que o próprio usuário cadastra em Ajustes. Em Ajustes há dez opções prontas para escolher com um toque e, ao fim da lista, **Outra**, que abre o campo livre. Ao digitar uma recompensa própria, o app comenta na hora se ela gera gasto, se pesa na saúde, se está vaga ou se contradiz o próprio objetivo — é uma checagem por palavras conhecidas (`CHECAGENS` em `dados.js`), um lembrete, não um bloqueio: quem decide é o usuário. A escolha fica registrada no ponto e no histórico; desmarcar o ponto devolve a recompensa.
+- **🏍️ Moto** — controle da moto do dia a dia: odômetro, consumo do último tanque e média geral em km/l, custo por quilômetro, e o acompanhamento de **troca de óleo** e **revisão** por quilometragem (intervalo ajustável, botão "Fiz agora", aviso quando falta pouco ou já venceu). Os abastecimentos guardam km, litros e valor; o consumo sai da distância desde o abastecimento anterior dividida pelos litros deste — por isso o cálculo pede tanque cheio.
 - **Ajustes** — nome, objetivo geral, lista de recompensas, receita do lembrete diário e backup dos dados.
 
 O app é deliberadamente enxuto: sem hábitos diários, medalhas, pontuação de jogo ou diário. A tela mostra o que informa o progresso e nada mais.

@@ -11,6 +11,7 @@ const $$ = sel => Array.from(document.querySelectorAll(sel));
 
 const ABAS_FINAIS = [
   { id: 'progresso', rotulo: 'Progresso' },
+  { id: 'moto', rotulo: '🏍️ Moto' },
   { id: 'ajustes', rotulo: 'Ajustes' }
 ];
 
@@ -96,6 +97,10 @@ function renderResumo() {
 
 function linhaAtividade(a) {
   const pct = percentualAtividade(a);
+  const seguinte = a.concluida ? null : proximoPonto(a);
+  const proximo = seguinte
+    ? (seguinte.ponto.titulo.trim() || `Defina o ponto ${seguinte.indice + 1}`)
+    : null;
   return `
     <li class="atividade ${a.concluida ? 'fechada' : ''}" data-atividade="${a.id}">
       <button class="atividade-cabecalho" data-acao="abrir">
@@ -104,6 +109,7 @@ function linhaAtividade(a) {
           <span class="atividade-titulo">${escapar(a.titulo)}</span>
           <span class="regua"><span style="width:${pct}%"></span></span>
           <span class="atividade-linha-info">${pontosConcluidos(a)} de ${PONTOS_POR_ATIVIDADE} pontos · ${a.concluida ? 'concluída' : textoParado(a)}</span>
+          ${proximo ? `<span class="proximo-passo">→ ${escapar(proximo)}</span>` : ''}
         </span>
         <span class="atividade-pct">${pct}%</span>
       </button>
@@ -278,6 +284,66 @@ function fecharEscolhaRecompensa() {
   $('#modal-recompensa').hidden = true;
 }
 
+/* ---------- Moto ---------- */
+
+const NOMES_MANUTENCAO = {
+  oleo: { nome: 'Troca de óleo', icone: '🛢️' },
+  revisao: { nome: 'Revisão', icone: '🔧' }
+};
+
+function numero(valor, casas) {
+  return valor.toLocaleString('pt-BR', { minimumFractionDigits: casas, maximumFractionDigits: casas });
+}
+
+function renderMoto() {
+  const moto = estado.moto;
+  const r = resumoMoto(moto);
+
+  $('#resumo-moto').innerHTML = `
+    <div class="resumo-item"><span class="resumo-valor">${numero(r.km, 0)}<small> km</small></span><span class="resumo-rotulo">odômetro</span></div>
+    <div class="resumo-item"><span class="resumo-valor">${r.ultimoConsumo ? numero(r.ultimoConsumo, 1) : '—'}<small> km/l</small></span><span class="resumo-rotulo">último consumo</span></div>
+    <div class="resumo-item"><span class="resumo-valor">${r.consumoMedio ? numero(r.consumoMedio, 1) : '—'}<small> km/l</small></span><span class="resumo-rotulo">média geral</span></div>
+    <div class="resumo-item"><span class="resumo-valor">${r.custoPorKm ? 'R$ ' + numero(r.custoPorKm, 2) : '—'}</span><span class="resumo-rotulo">custo por km</span></div>`;
+
+  $('#manutencoes').innerHTML = Object.keys(moto.manutencoes).map(chave => {
+    const m = moto.manutencoes[chave];
+    const s = situacaoManutencao(m, r.km);
+    const rotulo = s.semRegistro
+      ? 'Sem registro'
+      : s.vencida
+        ? `Vencida há ${numero(-s.restante, 0)} km`
+        : `Faltam ${numero(s.restante, 0)} km`;
+    return `
+      <div class="manutencao ${s.semRegistro ? 'sem-registro' : s.vencida ? 'vencida' : s.perto ? 'perto' : ''}" data-manutencao="${chave}">
+        <div class="cabecalho">
+          <span>${NOMES_MANUTENCAO[chave].icone} ${NOMES_MANUTENCAO[chave].nome}</span>
+          <span class="manutencao-status">${rotulo}</span>
+        </div>
+        <div class="regua"><span style="width:${s.percorrido}%"></span></div>
+        <p class="legenda">${s.semRegistro
+          ? 'Toque em “Fiz agora” quando trocar, ou registre o histórico ajustando o intervalo.'
+          : `Última em ${numero(m.ultimaKm, 0)} km${m.ultimaEm ? ' (' + formatarDataCurta(m.ultimaEm) + ')' : ''} · próxima em ${numero(s.proxima, 0)} km`}</p>
+        <div class="manutencao-acoes">
+          <label class="campo-rotulado pequeno">A cada (km)
+            <input type="number" min="100" step="100" class="campo-intervalo" data-manutencao="${chave}" value="${m.intervalo}">
+          </label>
+          <button class="botao secundario compacto" data-feita="${chave}">Fiz agora</button>
+        </div>
+      </div>`;
+  }).join('');
+
+  $('#lista-abastecimentos').innerHTML = r.lista.slice().reverse().map(a => `
+    <li class="abastecimento" data-abastecimento="${a.id}">
+      <div class="abastecimento-info">
+        <strong>${numero(a.km, 0)} km</strong>
+        <small>${escapar(formatarDataCurta(a.em))} · ${numero(a.litros, 2)} L${a.valor ? ' · R$ ' + numero(a.valor, 2) : ''}${a.precoLitro ? ' (R$ ' + numero(a.precoLitro, 2) + '/L)' : ''}</small>
+      </div>
+      <span class="abastecimento-consumo">${a.consumo ? numero(a.consumo, 1) + ' km/l' : '—'}</span>
+      <button class="icone-botao" data-remover-abastecimento="${a.id}" title="Remover">✕</button>
+    </li>`).join('');
+  $('#abastecimentos-vazio').hidden = r.lista.length > 0;
+}
+
 /* ---------- Render geral ---------- */
 
 function render() {
@@ -287,6 +353,7 @@ function render() {
   renderAtividades();
   renderProgresso();
   renderRecompensas();
+  renderMoto();
   if (abaAtual.startsWith('atv:')) renderPainelAtividade();
 
   const frase = fraseDoDia(hoje);
@@ -459,6 +526,68 @@ function ligarEventos() {
   $('#modal-fechar').addEventListener('click', fecharEscolhaRecompensa);
   $('#modal-recompensa').addEventListener('click', evento => {
     if (evento.target.id === 'modal-recompensa') fecharEscolhaRecompensa();
+  });
+
+  $('#botao-novo-abastecimento').addEventListener('click', () => {
+    const form = $('#form-abastecimento');
+    form.hidden = !form.hidden;
+    if (!form.hidden) $('#ab-km').focus();
+  });
+
+  $('#botao-cancelar-abastecimento').addEventListener('click', () => {
+    $('#form-abastecimento').hidden = true;
+    $('#form-abastecimento').reset();
+  });
+
+  $('#form-abastecimento').addEventListener('submit', evento => {
+    evento.preventDefault();
+    const km = Number($('#ab-km').value);
+    const litros = Number($('#ab-litros').value);
+    if (!(km > 0) || !(litros > 0)) return;
+    if (estado.moto.abastecimentos.some(a => a.km === km)) {
+      avisar('Já existe um registro com essa quilometragem.');
+      return;
+    }
+    atualizar(() => {
+      estado.moto.abastecimentos.push({
+        id: idNovo(), em: hoje, km, litros, valor: Number($('#ab-valor').value) || 0
+      });
+      estado.moto.abastecimentos.sort((a, b) => a.km - b.km);
+    });
+    $('#form-abastecimento').hidden = true;
+    $('#form-abastecimento').reset();
+    const r = resumoMoto(estado.moto);
+    avisar(r.ultimoConsumo ? `Consumo: ${numero(r.ultimoConsumo, 1)} km/l` : 'Abastecimento registrado.');
+  });
+
+  $('#lista-abastecimentos').addEventListener('click', evento => {
+    const botao = evento.target.closest('[data-remover-abastecimento]');
+    if (!botao) return;
+    const id = botao.dataset.removerAbastecimento;
+    atualizar(() => {
+      estado.moto.abastecimentos = estado.moto.abastecimentos.filter(a => a.id !== id);
+    });
+  });
+
+  $('#manutencoes').addEventListener('click', evento => {
+    const botao = evento.target.closest('[data-feita]');
+    if (!botao) return;
+    const chave = botao.dataset.feita;
+    const km = kmAtual(estado.moto);
+    if (!km) { avisar('Registre um abastecimento primeiro, para o app saber a quilometragem.'); return; }
+    atualizar(() => {
+      estado.moto.manutencoes[chave].ultimaKm = km;
+      estado.moto.manutencoes[chave].ultimaEm = hoje;
+    });
+    avisar(`${NOMES_MANUTENCAO[chave].nome} registrada em ${numero(km, 0)} km.`);
+  });
+
+  $('#manutencoes').addEventListener('change', evento => {
+    const campo = evento.target.closest('.campo-intervalo');
+    if (!campo) return;
+    const valor = Number(campo.value);
+    if (!(valor > 0)) return;
+    atualizar(() => { estado.moto.manutencoes[campo.dataset.manutencao].intervalo = valor; });
   });
 
   $('#campo-nome').addEventListener('input', evento => {

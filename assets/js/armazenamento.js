@@ -44,11 +44,51 @@ function normalizarPontos(bruto) {
   });
 }
 
+function motoVazia() {
+  return {
+    apelido: '',
+    manutencoes: {
+      oleo: { intervalo: 3000, ultimaKm: 0, ultimaEm: '' },
+      revisao: { intervalo: 6000, ultimaKm: 0, ultimaEm: '' }
+    },
+    abastecimentos: []
+  };
+}
+
+function normalizarMoto(bruto) {
+  const base = motoVazia();
+  const m = bruto && typeof bruto === 'object' ? bruto : {};
+  const manutencoes = {};
+  Object.keys(base.manutencoes).forEach(chave => {
+    const g = (m.manutencoes || {})[chave] || {};
+    manutencoes[chave] = {
+      intervalo: Number(g.intervalo) > 0 ? Number(g.intervalo) : base.manutencoes[chave].intervalo,
+      ultimaKm: Number(g.ultimaKm) || 0,
+      ultimaEm: typeof g.ultimaEm === 'string' ? g.ultimaEm : ''
+    };
+  });
+  return {
+    apelido: typeof m.apelido === 'string' ? m.apelido : '',
+    manutencoes,
+    abastecimentos: (Array.isArray(m.abastecimentos) ? m.abastecimentos : [])
+      .filter(a => a && Number(a.km) > 0 && Number(a.litros) > 0)
+      .map(a => ({
+        id: a.id || idNovo(),
+        em: typeof a.em === 'string' ? a.em : hojeISO(),
+        km: Number(a.km),
+        litros: Number(a.litros),
+        valor: Number(a.valor) || 0
+      }))
+      .sort((x, y) => x.km - y.km)
+  };
+}
+
 function estadoInicial() {
   return {
     versao: 2,
     perfil: { nome: 'Teo Neto', objetivo: '', inicio: hojeISO() },
     recompensas: [],
+    moto: motoVazia(),
     atividades: []
   };
 }
@@ -79,6 +119,7 @@ function normalizar(estado) {
     recompensas: (Array.isArray(estado.recompensas) ? estado.recompensas : [])
       .filter(r => typeof r === 'string' && r.trim())
       .map(r => r.trim()),
+    moto: normalizarMoto(estado.moto),
     atividades: (Array.isArray(estado.atividades) ? estado.atividades : [])
       .filter(a => a && typeof a.titulo === 'string')
       .map(a => ({

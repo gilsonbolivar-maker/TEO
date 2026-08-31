@@ -71,6 +71,46 @@
       </article>
     </section>
 
+    <!-- MOTO -->
+    <section class="painel" id="painel-moto">
+      <div class="resumo" id="resumo-moto"></div>
+
+      <article class="cartao">
+        <h2>Manutenção</h2>
+        <p class="legenda">Baseada na quilometragem do último abastecimento.</p>
+        <div id="manutencoes"></div>
+      </article>
+
+      <article class="cartao">
+        <div class="cartao-cabecalho">
+          <h2>Abastecimentos</h2>
+          <button class="botao secundario compacto" id="botao-novo-abastecimento">+ Abastecer</button>
+        </div>
+
+        <form class="form-atividade" id="form-abastecimento" hidden>
+          <div class="linha-campos">
+            <label class="campo-rotulado">Quilometragem
+              <input id="ab-km" type="number" min="0" step="1" inputmode="numeric" placeholder="18450" required>
+            </label>
+            <label class="campo-rotulado">Litros
+              <input id="ab-litros" type="number" min="0.1" step="0.01" inputmode="decimal" placeholder="12,5" required>
+            </label>
+            <label class="campo-rotulado">Valor pago (R$)
+              <input id="ab-valor" type="number" min="0" step="0.01" inputmode="decimal" placeholder="opcional">
+            </label>
+          </div>
+          <div class="linha-botoes">
+            <button type="submit" class="botao">Registrar</button>
+            <button type="button" class="botao secundario" id="botao-cancelar-abastecimento">Cancelar</button>
+          </div>
+          <p class="legenda">Registre sempre com o tanque cheio — é assim que o cálculo de km/l fica correto.</p>
+        </form>
+
+        <ul class="lista-abastecimentos" id="lista-abastecimentos"></ul>
+        <p class="vazio" id="abastecimentos-vazio">Nenhum abastecimento registrado. O consumo aparece a partir do segundo.</p>
+      </article>
+    </section>
+
     <!-- AJUSTES -->
     <section class="painel" id="painel-ajustes">
       <article class="cartao">
