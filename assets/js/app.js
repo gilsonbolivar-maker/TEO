@@ -143,16 +143,22 @@ function circuloDePontos(atividade) {
 function listaDePontos(atividade) {
   return atividade.pontos.map((ponto, i) => `
     <li class="ponto ${ponto.concluido ? 'feito' : ''}">
-      <button class="ponto-marca" data-acao="alternar-ponto" data-indice="${i}"
-              ${ponto.titulo.trim() ? '' : 'disabled'}
-              title="${ponto.concluido ? 'Desmarcar' : 'Marcar como concluído'}">
-        ${ponto.concluido ? '✓' : i + 1}
-      </button>
-      <input class="ponto-titulo" data-indice="${i}" type="text" maxlength="80"
-             value="${escapar(ponto.titulo)}"
-             placeholder="Ponto ${i + 1}: o que precisa acontecer"
-             aria-label="Nome do ponto ${i + 1}">
-      <span class="ponto-peso">${ponto.concluido ? escapar(formatarDataCurta(ponto.em)) : PESO_DO_PONTO + '%'}</span>
+      <div class="ponto-linha">
+        <button class="ponto-marca" data-acao="alternar-ponto" data-indice="${i}"
+                ${ponto.titulo.trim() ? '' : 'disabled'}
+                title="${ponto.concluido ? 'Desmarcar' : 'Marcar como concluído'}">
+          ${ponto.concluido ? '✓' : i + 1}
+        </button>
+        <input class="ponto-titulo" data-indice="${i}" type="text" maxlength="80"
+               value="${escapar(ponto.titulo)}"
+               placeholder="Ponto ${i + 1}: o que precisa acontecer"
+               aria-label="Nome do ponto ${i + 1}">
+        <span class="ponto-peso">${ponto.concluido ? escapar(formatarDataCurta(ponto.em)) : PESO_DO_PONTO + '%'}</span>
+      </div>
+      ${ponto.concluido ? `
+        <button class="ponto-recompensa" data-acao="escolher-recompensa" data-indice="${i}">
+          ${ponto.recompensa ? '🎁 ' + escapar(ponto.recompensa) : '🎁 Escolher recompensa'}
+        </button>` : ''}
     </li>`).join('');
 }
 
@@ -210,10 +216,45 @@ function renderProgresso() {
       <span class="avanco-data">${escapar(formatarDataCurta(av.em))}</span>
       <span class="avanco-texto">
         <strong>${escapar(av.ponto.titulo)}</strong>
-        <small>${escapar(av.atividade.icone)} ${escapar(av.atividade.titulo)} · ponto ${av.indice + 1}</small>
+        <small>${escapar(av.atividade.icone)} ${escapar(av.atividade.titulo)} · ponto ${av.indice + 1}${av.ponto.recompensa ? ' · 🎁 ' + escapar(av.ponto.recompensa) : ''}</small>
       </span>
     </li>`).join('');
   $('#historico-vazio').hidden = avancos.length > 0;
+}
+
+/* ---------- Recompensas ---------- */
+
+let escolhaEmAberto = null;
+
+function renderRecompensas() {
+  const lista = estado.recompensas || [];
+  $('#lista-recompensas').innerHTML = lista.map((r, i) => `
+    <li class="recompensa">
+      <span>🎁 ${escapar(r)}</span>
+      <button class="icone-botao" data-remover-recompensa="${i}" title="Remover">✕</button>
+    </li>`).join('');
+  $('#recompensas-vazio').hidden = lista.length > 0;
+}
+
+function abrirEscolhaRecompensa(atividade, indice) {
+  escolhaEmAberto = { atividade, indice };
+  const lista = estado.recompensas || [];
+  const ponto = atividade.pontos[indice];
+
+  $('#modal-texto').textContent = lista.length
+    ? `“${ponto.titulo}” está fechado. Escolha sua recompensa:`
+    : 'Você ainda não cadastrou nenhuma recompensa. Cadastre em Ajustes para poder escolher.';
+
+  $('#modal-lista').innerHTML = lista.map((r, i) => `
+    <li><button class="recompensa-opcao ${ponto.recompensa === r ? 'escolhida' : ''}" data-recompensa="${i}">🎁 ${escapar(r)}</button></li>
+  `).join('');
+
+  $('#modal-recompensa').hidden = false;
+}
+
+function fecharEscolhaRecompensa() {
+  escolhaEmAberto = null;
+  $('#modal-recompensa').hidden = true;
 }
 
 /* ---------- Render geral ---------- */
@@ -224,6 +265,7 @@ function render() {
   renderResumo();
   renderAtividades();
   renderProgresso();
+  renderRecompensas();
   if (abaAtual.startsWith('atv:')) renderPainelAtividade();
 
   const frase = fraseDoDia(hoje);
@@ -329,13 +371,16 @@ function ligarEventos() {
       atualizar(() => {
         ponto.concluido = !ponto.concluido;
         ponto.em = ponto.concluido ? hoje : '';
+        if (!ponto.concluido) ponto.recompensa = '';
         atividade.atualizadoEm = hoje;
         /* O círculo fechou: a atividade se conclui sozinha. */
         atividade.concluida = pontosConcluidos(atividade) === PONTOS_POR_ATIVIDADE;
       });
       renderPainelAtividade();
-      if (atividade.concluida) avisar('🏁 Círculo fechado! Objetivo concluído.');
-      else if (ponto.concluido) avisar(`${percentualAtividade(atividade)}% do círculo fechado`);
+      if (ponto.concluido) abrirEscolhaRecompensa(atividade, Number(gatilho.dataset.indice));
+
+    } else if (acao === 'escolher-recompensa') {
+      abrirEscolhaRecompensa(atividade, Number(gatilho.dataset.indice));
 
     } else if (acao === 'reabrir') {
       atualizar(() => { atividade.concluida = false; atividade.atualizadoEm = hoje; });
@@ -346,6 +391,37 @@ function ligarEventos() {
       trocarAba('inicio');
       avisar('Atividade removida.');
     }
+  });
+
+  $('#form-recompensa').addEventListener('submit', evento => {
+    evento.preventDefault();
+    const texto = $('#nova-recompensa').value.trim();
+    if (!texto) return;
+    atualizar(() => { estado.recompensas.push(texto); });
+    $('#nova-recompensa').value = '';
+  });
+
+  $('#lista-recompensas').addEventListener('click', evento => {
+    const botao = evento.target.closest('[data-remover-recompensa]');
+    if (!botao) return;
+    const i = Number(botao.dataset.removerRecompensa);
+    atualizar(() => { estado.recompensas.splice(i, 1); });
+  });
+
+  $('#modal-lista').addEventListener('click', evento => {
+    const opcao = evento.target.closest('[data-recompensa]');
+    if (!opcao || !escolhaEmAberto) return;
+    const { atividade, indice } = escolhaEmAberto;
+    const premio = estado.recompensas[Number(opcao.dataset.recompensa)];
+    atualizar(() => { atividade.pontos[indice].recompensa = premio; });
+    fecharEscolhaRecompensa();
+    renderPainelAtividade();
+    avisar(`🎁 Recompensa escolhida: ${premio}`);
+  });
+
+  $('#modal-fechar').addEventListener('click', fecharEscolhaRecompensa);
+  $('#modal-recompensa').addEventListener('click', evento => {
+    if (evento.target.id === 'modal-recompensa') fecharEscolhaRecompensa();
   });
 
   $('#campo-nome').addEventListener('input', evento => {

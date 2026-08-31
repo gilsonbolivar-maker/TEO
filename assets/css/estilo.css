@@ -325,3 +325,88 @@ input:focus, textarea:focus { outline: 2px solid var(--acento); outline-offset: 
 }
 
 .atividade-titulo-campo:hover { border-color: var(--borda); }
+
+/* ---------- Recompensas ---------- */
+
+.ponto { display: grid; gap: 6px; }
+.ponto-linha { display: flex; align-items: center; gap: 10px; }
+
+.ponto-recompensa {
+  justify-self: start;
+  margin-left: 40px;
+  border: 1px dashed var(--borda);
+  background: transparent;
+  color: var(--texto-suave);
+  border-radius: 999px;
+  padding: 4px 12px;
+  font: inherit;
+  font-size: .76rem;
+  cursor: pointer;
+}
+
+.ponto-recompensa:hover { border-style: solid; border-color: var(--acento); color: var(--texto); }
+
+.lista-recompensas { list-style: none; margin: 12px 0 0; padding: 0; display: grid; gap: 8px; }
+
+.recompensa {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 10px 12px;
+  border: 1px solid var(--borda);
+  border-radius: 10px;
+  background: var(--fundo-alt);
+  font-size: .88rem;
+}
+
+.icone-botao {
+  border: 0; background: transparent; color: var(--texto-suave);
+  font: inherit; cursor: pointer; padding: 2px 6px; border-radius: 6px;
+}
+
+.icone-botao:hover { color: var(--perigo); }
+
+#form-recompensa { margin-top: 12px; }
+#form-recompensa input { flex: 1; min-width: 140px; }
+
+/* ---------- Modal de escolha ---------- */
+
+.modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, .55);
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  z-index: 30;
+}
+
+.modal-caixa {
+  background: var(--cartao);
+  border: 1px solid var(--borda);
+  border-radius: var(--raio);
+  padding: 22px;
+  width: 100%;
+  max-width: 420px;
+  box-shadow: var(--sombra);
+}
+
+.modal-titulo { margin: 0; font-size: 1.05rem; font-weight: 650; }
+.lista-recompensas.escolha { margin-bottom: 16px; }
+
+.recompensa-opcao {
+  width: 100%;
+  text-align: left;
+  border: 1px solid var(--borda);
+  border-radius: 10px;
+  padding: 12px 14px;
+  background: var(--fundo-alt);
+  color: var(--texto);
+  font: inherit;
+  font-size: .92rem;
+  cursor: pointer;
+}
+
+.recompensa-opcao:hover { border-color: var(--acento); }
+.recompensa-opcao.escolhida { border-color: var(--acento); background: color-mix(in srgb, var(--acento) 16%, var(--fundo-alt)); font-weight: 600; }

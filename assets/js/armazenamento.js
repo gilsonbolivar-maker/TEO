@@ -27,7 +27,7 @@ function somarDias(iso, dias) {
 }
 
 function pontosVazios() {
-  return Array.from({ length: PONTOS_POR_ATIVIDADE }, () => ({ titulo: '', concluido: false, em: '' }));
+  return Array.from({ length: PONTOS_POR_ATIVIDADE }, () => ({ titulo: '', concluido: false, em: '', recompensa: '' }));
 }
 
 /* Sempre devolve exatamente 5 pontos, completando o que vier salvo. */
@@ -38,7 +38,8 @@ function normalizarPontos(bruto) {
     return {
       titulo: typeof p.titulo === 'string' ? p.titulo : '',
       concluido: p.concluido === true,
-      em: typeof p.em === 'string' ? p.em : ''
+      em: typeof p.em === 'string' ? p.em : '',
+      recompensa: typeof p.recompensa === 'string' ? p.recompensa : ''
     };
   });
 }
@@ -47,6 +48,7 @@ function estadoInicial() {
   return {
     versao: 2,
     perfil: { nome: 'Teo Neto', objetivo: '', inicio: hojeISO() },
+    recompensas: [],
     atividades: []
   };
 }
@@ -74,6 +76,9 @@ function normalizar(estado) {
   return {
     versao: 2,
     perfil: Object.assign({}, base.perfil, estado.perfil || {}),
+    recompensas: (Array.isArray(estado.recompensas) ? estado.recompensas : [])
+      .filter(r => typeof r === 'string' && r.trim())
+      .map(r => r.trim()),
     atividades: (Array.isArray(estado.atividades) ? estado.atividades : [])
       .filter(a => a && typeof a.titulo === 'string')
       .map(a => ({

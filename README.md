@@ -21,7 +21,8 @@ O programa acompanha o desenvolvimento em **atividades específicas**. Cada ativ
 - **Início** — o resumo em números (em andamento, concluídas, pontos concluídos, média geral) e a lista de atividades, cada uma com a **régua de progresso**, os pontos vencidos e há quanto tempo não avança.
 - **Uma aba por atividade** — círculo grande, anotação de onde parou e os cinco pontos. A barra de abas rola quando há muitas.
 - **Progresso** — o andamento de todas as atividades lado a lado e o histórico de avanços com a data de cada ponto concluído.
-- **Ajustes** — nome, objetivo geral, receita do lembrete diário e backup dos dados.
+- **Recompensas** — cada ponto concluído dá direito a escolher uma recompensa da lista que o próprio usuário cadastra em Ajustes. A escolha fica registrada no ponto e no histórico; desmarcar o ponto devolve a recompensa.
+- **Ajustes** — nome, objetivo geral, lista de recompensas, receita do lembrete diário e backup dos dados.
 
 O app é deliberadamente enxuto: sem hábitos diários, medalhas, pontuação de jogo ou diário. A tela mostra o que informa o progresso e nada mais.
 

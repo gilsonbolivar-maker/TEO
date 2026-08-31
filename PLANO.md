@@ -114,7 +114,7 @@ Na página inicial a lista mostra o nome de cada atividade com uma **régua de p
 - O **ponto 5 é a prova de conclusão**: o resumo escrito, a música tocada, a prova feita. Sem prova, a atividade não termina — ela apenas some.
 - Se você não consegue dividir em cinco, o objetivo provavelmente está grande demais: quebre em duas atividades.
 
-Concluir uma atividade rende as medalhas *Terminei* e, na quinta, *Maratonista*.
+**A cada ponto concluído, o usuário escolhe uma recompensa** da lista que ele mesmo cadastrou. Duas regras que fazem isso funcionar: a recompensa vem depois do ponto, nunca antes; e ela não pode contradizer o objetivo — não se comemora uma semana de treino desmontando a seguinte.
 
 ## 7. Ritual semanal (domingo, 15 minutos)
 

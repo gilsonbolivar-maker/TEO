@@ -82,6 +82,17 @@
       </article>
 
       <article class="cartao">
+        <h2>Recompensas</h2>
+        <p class="legenda">A cada ponto concluído você escolhe uma destas. Cadastre o que vale a pena para você.</p>
+        <ul class="lista-recompensas" id="lista-recompensas"></ul>
+        <p class="vazio" id="recompensas-vazio">Nenhuma recompensa cadastrada ainda.</p>
+        <form class="linha-botoes" id="form-recompensa">
+          <input id="nova-recompensa" type="text" maxlength="60" placeholder="Ex.: uma hora de jogo" required>
+          <button type="submit" class="botao">Adicionar</button>
+        </form>
+      </article>
+
+      <article class="cartao">
         <h2>Lembrete diário</h2>
         <p class="legenda">O programa não envia notificação sozinho. Para ser lembrado todo dia no mesmo horário, crie uma automação no app <strong>Atalhos</strong>:</p>
         <ol class="passos">
@@ -108,6 +119,17 @@
   <footer class="rodape">
     <p id="frase-rodape"></p>
   </footer>
+
+  <div class="modal" id="modal-recompensa" hidden>
+    <div class="modal-caixa">
+      <p class="modal-titulo">Ponto concluído 🎉</p>
+      <p class="legenda" id="modal-texto"></p>
+      <ul class="lista-recompensas escolha" id="modal-lista"></ul>
+      <div class="linha-botoes">
+        <button class="botao secundario" id="modal-fechar">Escolher depois</button>
+      </div>
+    </div>
+  </div>
 
   <div class="aviso" id="aviso" hidden></div>
 
