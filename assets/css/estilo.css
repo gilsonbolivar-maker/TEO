@@ -556,3 +556,13 @@ select {
 .aula-hora small { font-size: .7rem; font-weight: 400; color: var(--texto-suave); }
 .aula-info { flex: 1; min-width: 0; display: grid; }
 .aula-info small { font-size: .72rem; color: var(--texto-suave); }
+
+/* Listas longas rolam dentro do próprio cartão. */
+.lista-abastecimentos, #manutencoes {
+  max-height: 320px;
+  overflow-y: auto;
+  padding-right: 4px;
+  scrollbar-width: thin;
+}
+
+.lista-abastecimentos { overscroll-behavior: contain; }
