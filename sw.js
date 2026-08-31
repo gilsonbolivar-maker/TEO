@@ -3,7 +3,7 @@
  * Ao mudar qualquer arquivo do app, suba o número da versão abaixo.
  */
 
-const VERSAO = 'teo-v6';
+const VERSAO = 'teo-v7';
 
 const ARQUIVOS = [
   './',

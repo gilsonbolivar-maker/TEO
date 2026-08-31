@@ -48,3 +48,30 @@ const FRASES = [
 /* Cada atividade se divide em 5 pontos; cada ponto vale 20% do círculo. */
 const PONTOS_POR_ATIVIDADE = 5;
 const PESO_DO_PONTO = 100 / PONTOS_POR_ATIVIDADE;
+
+/* O ícone da atividade é deduzido do nome — sem campo para preencher. */
+const ICONES = [
+  { icone: '📖', palavras: ['ler', 'leitura', 'livro', 'romance'] },
+  { icone: '🏃', palavras: ['corr', ' km', 'maratona', 'caminhada'] },
+  { icone: '🏋️', palavras: ['academia', 'muscula', 'treino', 'peso'] },
+  { icone: '🎸', palavras: ['violão', 'violao', 'guitarra', 'música', 'musica', 'piano', 'bateria'] },
+  { icone: '🗣️', palavras: ['inglês', 'ingles', 'espanhol', 'idioma', 'francês'] },
+  { icone: '💻', palavras: ['program', 'código', 'codigo', 'site', 'aplicativo'] },
+  { icone: '🎓', palavras: ['curso', 'aula', 'estud', 'faculdade', 'escola'] },
+  { icone: '📝', palavras: ['prova', 'vestibular', 'enem', 'concurso', 'redaç'] },
+  { icone: '🥗', palavras: ['dieta', 'aliment', 'comida', 'emagrec'] },
+  { icone: '🧘', palavras: ['medita', 'respira', 'ioga', 'yoga'] },
+  { icone: '💰', palavras: ['dinheiro', 'poupar', 'financ', 'investir', 'economizar'] },
+  { icone: '✍️', palavras: ['escrev', 'diário', 'texto', 'artigo'] },
+  { icone: '🚴', palavras: ['bicicleta', 'bike', 'pedal'] },
+  { icone: '🏊', palavras: ['nata', 'piscina', 'nadar'] },
+  { icone: '⚽', palavras: ['futebol', 'jogo', 'time'] },
+  { icone: '✈️', palavras: ['viagem', 'viajar'] },
+  { icone: '🎨', palavras: ['desenh', 'pint', 'arte'] }
+];
+
+function iconeSugerido(titulo) {
+  const nome = titulo.toLowerCase();
+  const achado = ICONES.find(item => item.palavras.some(palavra => nome.includes(palavra)));
+  return achado ? achado.icone : '🎯';
+}

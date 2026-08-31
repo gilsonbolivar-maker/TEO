@@ -273,9 +273,7 @@ input:focus, textarea:focus { outline: 2px solid var(--acento); outline-offset: 
   background: var(--fundo-alt);
 }
 
-.linha-campos { display: flex; gap: 8px; align-items: center; }
-.linha-campos input[type="text"]:not(.campo-icone) { flex: 1; min-width: 0; }
-.campo-icone { width: 56px; text-align: center; flex-shrink: 0; }
+.form-atividade input[type="text"] { padding: 13px 14px; font-size: 1rem; }
 
 .botao {
   border: 0;

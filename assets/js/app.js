@@ -266,7 +266,7 @@ function ligarEventos() {
     const nova = {
       id: idNovo(),
       titulo,
-      icone: $('#atv-icone').value.trim() || '📌',
+      icone: iconeSugerido(titulo),
       nota: '',
       concluida: false,
       criadaEm: hoje,
