@@ -112,3 +112,49 @@ function situacaoManutencao(manutencao, km) {
     : 0;
   return { proxima, restante, percorrido, vencida: restante <= 0, perto: restante > 0 && restante <= 300 };
 }
+
+/* ---------- Aulas ---------- */
+
+const DIAS_SEMANA = ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'];
+
+function minutosDe(hora) {
+  const [h, m] = hora.split(':').map(Number);
+  return h * 60 + m;
+}
+
+function duracaoEmTexto(minutos) {
+  if (minutos < 1) return 'agora';
+  if (minutos < 60) return `${minutos} min`;
+  const h = Math.floor(minutos / 60);
+  const m = minutos % 60;
+  return m ? `${h}h${String(m).padStart(2, '0')}` : `${h}h`;
+}
+
+/* Qual aula está acontecendo e qual vem a seguir, a partir do momento informado. */
+function situacaoAulas(aulas, agora) {
+  const dia = agora.getDay();
+  const minutos = agora.getHours() * 60 + agora.getMinutes();
+
+  const emAndamento = aulas.find(a =>
+    a.dia === dia && minutosDe(a.inicio) <= minutos && minutos < minutosDe(a.fim)) || null;
+
+  let proxima = null;
+  let faltam = 0;
+  for (let adiante = 0; adiante < 7 && !proxima; adiante++) {
+    const diaAlvo = (dia + adiante) % 7;
+    const candidatas = aulas
+      .filter(a => a.dia === diaAlvo && (adiante > 0 || minutosDe(a.inicio) > minutos))
+      .sort((x, y) => minutosDe(x.inicio) - minutosDe(y.inicio));
+    if (candidatas.length) {
+      proxima = candidatas[0];
+      faltam = adiante * 1440 + minutosDe(proxima.inicio) - minutos;
+    }
+  }
+
+  return {
+    emAndamento,
+    restante: emAndamento ? minutosDe(emAndamento.fim) - minutos : 0,
+    proxima,
+    faltam
+  };
+}

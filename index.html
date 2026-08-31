@@ -71,6 +71,51 @@
       </article>
     </section>
 
+    <!-- AULAS -->
+    <section class="painel" id="painel-aulas">
+      <article class="cartao cartao-relogio">
+        <p class="relogio" id="relogio">--:--</p>
+        <p class="relogio-data" id="relogio-data"></p>
+        <div class="aula-agora" id="aula-agora"></div>
+      </article>
+
+      <article class="cartao">
+        <div class="cartao-cabecalho">
+          <h2>Grade da semana</h2>
+          <button class="botao secundario compacto" id="botao-nova-aula">+ Aula</button>
+        </div>
+
+        <form class="form-atividade" id="form-aula" hidden>
+          <div class="linha-campos">
+            <label class="campo-rotulado">Dia
+              <select id="aula-dia"></select>
+            </label>
+            <label class="campo-rotulado">Início
+              <input id="aula-inicio" type="time" required>
+            </label>
+            <label class="campo-rotulado">Fim
+              <input id="aula-fim" type="time" required>
+            </label>
+          </div>
+          <div class="linha-campos">
+            <label class="campo-rotulado">Turma
+              <input id="aula-turma" type="text" maxlength="30" placeholder="3º ano B" required>
+            </label>
+            <label class="campo-rotulado">Sala (opcional)
+              <input id="aula-local" type="text" maxlength="24" placeholder="Sala 12">
+            </label>
+          </div>
+          <div class="linha-botoes">
+            <button type="submit" class="botao">Adicionar</button>
+            <button type="button" class="botao secundario" id="botao-cancelar-aula">Cancelar</button>
+          </div>
+        </form>
+
+        <div id="grade-aulas"></div>
+        <p class="vazio" id="aulas-vazio">Nenhuma aula na grade. Toque em <strong>+ Aula</strong>.</p>
+      </article>
+    </section>
+
     <!-- MOTO -->
     <section class="painel" id="painel-moto">
       <div class="resumo" id="resumo-moto"></div>

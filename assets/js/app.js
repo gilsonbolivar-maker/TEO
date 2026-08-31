@@ -11,6 +11,7 @@ const $$ = sel => Array.from(document.querySelectorAll(sel));
 
 const ABAS_FINAIS = [
   { id: 'progresso', rotulo: 'Progresso' },
+  { id: 'aulas', rotulo: '🎓 Aulas' },
   { id: 'moto', rotulo: '🏍️ Moto' },
   { id: 'ajustes', rotulo: 'Ajustes' }
 ];
@@ -284,6 +285,59 @@ function fecharEscolhaRecompensa() {
   $('#modal-recompensa').hidden = true;
 }
 
+/* ---------- Aulas ---------- */
+
+function renderRelogio() {
+  const agora = new Date();
+  $('#relogio').textContent = agora.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+  $('#relogio-data').textContent = agora.toLocaleDateString('pt-BR', {
+    weekday: 'long', day: '2-digit', month: 'long'
+  });
+
+  const s = situacaoAulas(estado.aulas || [], agora);
+  const caixa = $('#aula-agora');
+
+  if (s.emAndamento) {
+    caixa.className = 'aula-agora em-aula';
+    caixa.innerHTML = `
+      <p class="aula-rotulo">Aula agora</p>
+      <p class="aula-turma">${escapar(s.emAndamento.turma)}</p>
+      <p class="aula-detalhe">${escapar(s.emAndamento.inicio)} às ${escapar(s.emAndamento.fim)}${s.emAndamento.local ? ' · ' + escapar(s.emAndamento.local) : ''} · termina em ${duracaoEmTexto(s.restante)}</p>`;
+  } else if (s.proxima) {
+    caixa.className = 'aula-agora';
+    caixa.innerHTML = `
+      <p class="aula-rotulo">Sem aula agora · próxima</p>
+      <p class="aula-turma">${escapar(s.proxima.turma)}</p>
+      <p class="aula-detalhe">${escapar(DIAS_SEMANA[s.proxima.dia])}, ${escapar(s.proxima.inicio)}${s.proxima.local ? ' · ' + escapar(s.proxima.local) : ''} · em ${duracaoEmTexto(s.faltam)}</p>`;
+  } else {
+    caixa.className = 'aula-agora';
+    caixa.innerHTML = '<p class="aula-detalhe">Nenhuma aula cadastrada na grade.</p>';
+  }
+}
+
+function renderGrade() {
+  const aulas = estado.aulas || [];
+  const agora = new Date();
+  const dias = [1, 2, 3, 4, 5, 6, 0].filter(d => aulas.some(a => a.dia === d));
+
+  $('#grade-aulas').innerHTML = dias.map(d => `
+    <div class="dia-grade ${d === agora.getDay() ? 'hoje' : ''}">
+      <p class="dia-nome">${DIAS_SEMANA[d]}${d === agora.getDay() ? ' · hoje' : ''}</p>
+      <ul class="lista-aulas">
+        ${aulas.filter(a => a.dia === d).map(a => `
+          <li class="aula">
+            <span class="aula-hora">${escapar(a.inicio)}<small>${escapar(a.fim)}</small></span>
+            <span class="aula-info">
+              <strong>${escapar(a.turma)}</strong>
+              ${a.local ? `<small>${escapar(a.local)}</small>` : ''}
+            </span>
+            <button class="icone-botao" data-remover-aula="${a.id}" title="Remover">✕</button>
+          </li>`).join('')}
+      </ul>
+    </div>`).join('');
+  $('#aulas-vazio').hidden = aulas.length > 0;
+}
+
 /* ---------- Moto ---------- */
 
 const NOMES_MANUTENCAO = {
@@ -354,6 +408,8 @@ function render() {
   renderProgresso();
   renderRecompensas();
   renderMoto();
+  renderGrade();
+  renderRelogio();
   if (abaAtual.startsWith('atv:')) renderPainelAtividade();
 
   const frase = fraseDoDia(hoje);
@@ -527,6 +583,50 @@ function ligarEventos() {
   $('#modal-recompensa').addEventListener('click', evento => {
     if (evento.target.id === 'modal-recompensa') fecharEscolhaRecompensa();
   });
+
+  $('#aula-dia').innerHTML = [1, 2, 3, 4, 5, 6, 0]
+    .map(d => `<option value="${d}">${DIAS_SEMANA[d]}</option>`).join('');
+
+  $('#botao-nova-aula').addEventListener('click', () => {
+    const form = $('#form-aula');
+    form.hidden = !form.hidden;
+    if (!form.hidden) $('#aula-turma').focus();
+  });
+
+  $('#botao-cancelar-aula').addEventListener('click', () => {
+    $('#form-aula').hidden = true;
+    $('#form-aula').reset();
+  });
+
+  $('#form-aula').addEventListener('submit', evento => {
+    evento.preventDefault();
+    const turma = $('#aula-turma').value.trim();
+    const inicio = $('#aula-inicio').value;
+    const fim = $('#aula-fim').value;
+    if (!turma || !inicio || !fim) return;
+    if (minutosDe(fim) <= minutosDe(inicio)) { avisar('O fim precisa ser depois do início.'); return; }
+    atualizar(() => {
+      estado.aulas.push({
+        id: idNovo(), dia: Number($('#aula-dia').value), inicio, fim, turma,
+        local: $('#aula-local').value.trim()
+      });
+      estado.aulas.sort((x, y) => x.dia - y.dia || (x.inicio < y.inicio ? -1 : 1));
+    });
+    $('#form-aula').hidden = true;
+    $('#form-aula').reset();
+    avisar('Aula adicionada à grade.');
+  });
+
+  $('#grade-aulas').addEventListener('click', evento => {
+    const botao = evento.target.closest('[data-remover-aula]');
+    if (!botao) return;
+    atualizar(() => {
+      estado.aulas = estado.aulas.filter(a => a.id !== botao.dataset.removerAula);
+    });
+  });
+
+  /* O relógio anda sozinho, sem redesenhar o resto da tela. */
+  setInterval(renderRelogio, 1000);
 
   $('#botao-novo-abastecimento').addEventListener('click', () => {
     const form = $('#form-abastecimento');

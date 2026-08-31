@@ -90,6 +90,7 @@ function estadoInicial() {
     perfil: { nome: 'Teo Neto', objetivo: '', inicio: hojeISO() },
     recompensas: [],
     moto: motoVazia(),
+    aulas: [],
     atividades: []
   };
 }
@@ -121,6 +122,17 @@ function normalizar(estado) {
       .filter(r => typeof r === 'string' && r.trim())
       .map(r => r.trim()),
     moto: normalizarMoto(estado.moto),
+    aulas: (Array.isArray(estado.aulas) ? estado.aulas : [])
+      .filter(a => a && typeof a.turma === 'string' && a.turma.trim() && /^\d{2}:\d{2}$/.test(a.inicio || ''))
+      .map(a => ({
+        id: a.id || idNovo(),
+        dia: Math.min(6, Math.max(0, Number(a.dia) || 0)),
+        inicio: a.inicio,
+        fim: /^\d{2}:\d{2}$/.test(a.fim || '') ? a.fim : a.inicio,
+        turma: a.turma.trim(),
+        local: typeof a.local === 'string' ? a.local.trim() : ''
+      }))
+      .sort((x, y) => x.dia - y.dia || (x.inicio < y.inicio ? -1 : 1)),
     atividades: (Array.isArray(estado.atividades) ? estado.atividades : [])
       .filter(a => a && typeof a.titulo === 'string')
       .map(a => ({
