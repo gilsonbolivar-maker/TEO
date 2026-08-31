@@ -98,6 +98,26 @@ Dias ruins são previstos pelo programa, não exceções a ele.
 
 ---
 
+## 6.1 As atividades e seus 5 módulos
+
+Hábito é o que se repete todo dia. **Atividade** é o que atravessa semanas: um livro, um curso, um projeto. Cada atividade do quadro "Continuar de onde parei" se estrutura em cinco módulos, liberados um a um — o seguinte abre quando o anterior recebe alguma coisa.
+
+| # | Módulo | Pergunta que responde | Campos |
+|---|---|---|---|
+| 1 | **O Início** | Por que isso importa e quando estará pronto? | Meu motivo em uma frase · Linha de chegada |
+| 2 | **Os Primeiros Passos** | Como saio do zero ainda hoje? | Primeiro passo de 15 min · Data de início · O que preciso ter em mãos |
+| 3 | **O Ritmo** | Como isso vira rotina? | Dose e frequência · Quando no dia · Modo mínimo |
+| 4 | **Os Obstáculos** | Como eu não desisto? | O que costuma me fazer largar · Se… então… · Quem me cobra |
+| 5 | **A Chegada** | Como termina e o que eu ganho? | Marcos · Prova de conclusão · Recompensa · O que aprendi |
+
+Por que estes cinco:
+
+- **A linha de chegada (1)** é o que impede a atividade de se arrastar sem fim: sem definição de pronto, nada fica pronto.
+- **O primeiro passo de 15 minutos (2)** existe para matar o adiamento; se o primeiro passo é grande, ele nunca acontece.
+- **O modo mínimo (3)** é a ponte com o protocolo de dia ruim (§6): mantém a corrente viva quando a vontade some.
+- **O "se… então…" (4)** é decidido com a cabeça fria, antes da crise — vale muito mais que força de vontade no dia ruim.
+- **A prova de conclusão (5)** dá um fim visível ao ciclo; sem isso, a atividade não termina, ela apenas some.
+
 ## 7. Ritual semanal (domingo, 15 minutos)
 
 Abrir a aba **Progresso** e responder por escrito:

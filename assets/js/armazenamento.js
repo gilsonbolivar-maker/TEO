@@ -30,6 +30,28 @@ function somarDias(iso, dias) {
   return dataParaISO(d);
 }
 
+function modulosVazios() {
+  const vazio = {};
+  MODULOS.forEach(mod => {
+    vazio[mod.id] = {};
+    mod.campos.forEach(campo => { vazio[mod.id][campo.id] = ''; });
+  });
+  return vazio;
+}
+
+function normalizarModulos(bruto) {
+  const limpo = modulosVazios();
+  if (!bruto || typeof bruto !== 'object') return limpo;
+  MODULOS.forEach(mod => {
+    const guardado = bruto[mod.id];
+    if (!guardado || typeof guardado !== 'object') return;
+    mod.campos.forEach(campo => {
+      if (typeof guardado[campo.id] === 'string') limpo[mod.id][campo.id] = guardado[campo.id];
+    });
+  });
+  return limpo;
+}
+
 function estadoInicial() {
   return {
     versao: 1,
@@ -93,7 +115,8 @@ function normalizar(estado) {
       meta: Number(a.meta) || 0,
       unidade: typeof a.unidade === 'string' ? a.unidade : '',
       concluida: a.concluida === true,
-      atualizadoEm: a.atualizadoEm || hojeISO()
+      atualizadoEm: a.atualizadoEm || hojeISO(),
+      modulos: normalizarModulos(a.modulos)
     }));
 
   Object.keys(limpo.registros).forEach(dia => {

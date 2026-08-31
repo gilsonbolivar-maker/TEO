@@ -536,3 +536,53 @@ input:focus, textarea:focus { outline: 2px solid var(--acento); outline-offset: 
 .concluidas-lista { margin-top: 10px; }
 .concluidas-lista .atividade { border-left-color: var(--sucesso); opacity: .65; }
 .concluidas-lista .atividade-titulo { text-decoration: line-through; }
+
+/* ---------- Módulos da atividade ---------- */
+
+.atividade-modulos {
+  font-size: .7rem;
+  font-weight: 700;
+  color: var(--texto-suave);
+  padding: 2px 8px;
+  border-radius: 999px;
+  border: 1px solid var(--borda);
+  white-space: nowrap;
+}
+
+.modulos { margin-top: 12px; }
+
+.modulos > summary {
+  cursor: pointer;
+  font-size: .8rem;
+  font-weight: 600;
+  color: var(--acento);
+  padding: 6px 0;
+}
+
+.modulo {
+  border-top: 1px solid var(--borda);
+  padding: 12px 0 4px;
+}
+
+.modulo-cabecalho { display: flex; align-items: center; gap: 8px; margin: 0; font-size: .92rem; }
+
+.modulo-num {
+  width: 22px; height: 22px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  display: grid; place-items: center;
+  font-size: .72rem; font-weight: 700;
+  background: var(--borda);
+  color: var(--texto-suave);
+}
+
+.modulo.pronto .modulo-num { background: var(--acento); color: #17110b; }
+.modulo-marca { color: var(--sucesso); font-weight: 700; }
+.modulo-resumo { margin: 4px 0 8px; font-size: .76rem; color: var(--texto-suave); }
+
+.modulo.travado { opacity: .55; }
+.modulo.travado .modulo-num { background: transparent; font-size: .8rem; }
+.modulo-aviso { margin: 6px 0 4px; font-size: .78rem; color: var(--texto-suave); }
+
+.modulo .rotulo { margin: 10px 0 4px; font-size: .76rem; }
+.modulo input, .modulo textarea { font-size: .88rem; padding: 8px 10px; }

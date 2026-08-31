@@ -240,6 +240,61 @@ function textoParado(dias) {
   return `parado há ${dias} dias`;
 }
 
+/* Um módulo conta como preenchido quando tem pelo menos um campo escrito. */
+function moduloPreenchido(atividade, mod) {
+  const dados = (atividade.modulos || {})[mod.id] || {};
+  return mod.campos.some(campo => (dados[campo.id] || '').trim() !== '');
+}
+
+function modulosPreenchidos(atividade) {
+  return MODULOS.filter(mod => moduloPreenchido(atividade, mod)).length;
+}
+
+/* O módulo seguinte só abre depois que o anterior recebe alguma coisa:
+   preencher cinco blocos de uma vez espanta qualquer um. */
+function moduloLiberado(atividade, indice) {
+  return indice === 0 || moduloPreenchido(atividade, MODULOS[indice - 1]);
+}
+
+const modulosAbertos = new Set();
+
+function campoModulo(atividade, mod, campo) {
+  const valor = ((atividade.modulos || {})[mod.id] || {})[campo.id] || '';
+  const comuns = `class="campo-modulo" data-modulo="${mod.id}" data-campo="${campo.id}" aria-label="${escapar(campo.rotulo)}"`;
+  const entrada = campo.tipo === 'date'
+    ? `<input type="date" ${comuns} value="${escapar(valor)}">`
+    : campo.linhas
+      ? `<textarea rows="${campo.linhas}" ${comuns} placeholder="${escapar(campo.dica || '')}">${escapar(valor)}</textarea>`
+      : `<input type="text" maxlength="120" ${comuns} value="${escapar(valor)}" placeholder="${escapar(campo.dica || '')}">`;
+  return `<label class="rotulo">${escapar(campo.rotulo)}</label>${entrada}`;
+}
+
+function blocoModulos(atividade) {
+  const total = modulosPreenchidos(atividade);
+  const corpo = MODULOS.map((mod, i) => {
+    const liberado = moduloLiberado(atividade, i);
+    const pronto = moduloPreenchido(atividade, mod);
+    return `
+      <div class="modulo ${liberado ? '' : 'travado'} ${pronto ? 'pronto' : ''}">
+        <p class="modulo-cabecalho">
+          <span class="modulo-num">${liberado ? mod.num : '🔒'}</span>
+          <strong>${escapar(mod.nome)}</strong>
+          ${pronto ? '<span class="modulo-marca">✓</span>' : ''}
+        </p>
+        <p class="modulo-resumo">${escapar(mod.resumo)}</p>
+        ${liberado
+          ? mod.campos.map(campo => campoModulo(atividade, mod, campo)).join('')
+          : `<p class="modulo-aviso">Preencha <strong>${escapar(MODULOS[i - 1].nome)}</strong> para abrir este módulo.</p>`}
+      </div>`;
+  }).join('');
+
+  return `
+    <details class="modulos" data-modulos="${atividade.id}" ${modulosAbertos.has(atividade.id) ? 'open' : ''}>
+      <summary>Módulos · ${total} de ${MODULOS.length} preenchidos</summary>
+      ${corpo}
+    </details>`;
+}
+
 function cartaoAtividade(a, concluida) {
   const dias = diasParado(a);
   const pct = a.meta > 0 ? Math.min(100, Math.round((a.atual / a.meta) * 100)) : 0;
@@ -249,6 +304,7 @@ function cartaoAtividade(a, concluida) {
       <div class="atividade-topo">
         <span class="atividade-icone">${escapar(a.icone)}</span>
         <span class="atividade-titulo">${escapar(a.titulo)}</span>
+        <span class="atividade-modulos">${modulosPreenchidos(a)}/${MODULOS.length}</span>
         ${concluida ? '' : `<span class="atividade-parado ${dias >= 3 ? 'alerta' : ''}">${textoParado(dias)}</span>`}
       </div>
       <p class="atividade-nota ${a.nota ? '' : 'vazia'}">${a.nota ? escapar(a.nota) : 'Sem anotação de onde parou.'}</p>
@@ -257,6 +313,7 @@ function cartaoAtividade(a, concluida) {
           <div class="trilha"><div style="width:${pct}%"></div></div>
           <span class="numeros">${a.atual}/${a.meta}${unidade} · ${pct}%</span>
         </div>` : ''}
+      ${blocoModulos(a)}
       <div class="atividade-acoes">
         ${concluida
           ? '<button data-acao="reabrir">Reabrir</button>'
@@ -326,11 +383,48 @@ function ligarEventosAtividades() {
     atualizar(() => {
       const existente = (estado.atividades || []).find(a => a.id === emEdicao);
       if (existente) Object.assign(existente, dados);
-      else estado.atividades.push({ id: idNovo(), concluida: false, ...dados });
+      else estado.atividades.push({ id: idNovo(), concluida: false, modulos: modulosVazios(), ...dados });
     });
     avisar(emEdicao ? 'Atividade atualizada.' : 'Atividade adicionada.');
     fecharFormAtividade();
   });
+
+  /* Salva enquanto digita, para nada se perder se o app for fechado no meio.
+     A tela só é redesenhada ao sair do campo, para não atrapalhar a digitação. */
+  function gravarCampoModulo(campo) {
+    const item = campo.closest('[data-atividade]');
+    if (!item) return null;
+    const atividade = (estado.atividades || []).find(a => a.id === item.dataset.atividade);
+    if (!atividade) return null;
+    atividade.modulos[campo.dataset.modulo][campo.dataset.campo] = campo.value;
+    atividade.atualizadoEm = hoje;
+    persistir();
+
+    /* Atualiza só os contadores: redesenhar a lista inteira tiraria o foco do campo. */
+    const feitos = modulosPreenchidos(atividade);
+    const resumo = item.querySelector('.modulos > summary');
+    const marcador = item.querySelector('.atividade-modulos');
+    if (resumo) resumo.textContent = `Módulos · ${feitos} de ${MODULOS.length} preenchidos`;
+    if (marcador) marcador.textContent = `${feitos}/${MODULOS.length}`;
+    return atividade;
+  }
+
+  document.addEventListener('input', evento => {
+    const campo = evento.target.closest('.campo-modulo');
+    if (campo) gravarCampoModulo(campo);
+  });
+
+  document.addEventListener('change', evento => {
+    const campo = evento.target.closest('.campo-modulo');
+    if (campo && gravarCampoModulo(campo)) renderAtividades();
+  });
+
+  document.addEventListener('toggle', evento => {
+    const bloco = evento.target.closest('[data-modulos]');
+    if (!bloco) return;
+    if (bloco.open) modulosAbertos.add(bloco.dataset.modulos);
+    else modulosAbertos.delete(bloco.dataset.modulos);
+  }, true);
 
   document.addEventListener('click', evento => {
     const botao = evento.target.closest('.atividade-acoes [data-acao]');
